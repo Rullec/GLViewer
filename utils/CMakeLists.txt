@@ -18,6 +18,8 @@ Rand.cpp
 TimeUtil.cpp
 SysUtil.cpp
 LogUtil.cpp
+OpencvUtil.cpp
+ObjUtil.cpp
 )
 target_link_libraries(utils_lib JSON)
 

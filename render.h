@@ -4,6 +4,7 @@
 #include "shader.h"
 #include "utils/MathUtil.h"
 SIM_DECLARE_CLASS_AND_PTR(CameraBase);
+SIM_DECLARE_CLASS_AND_PTR(cPng2PointCloud);
 
 class cRender
 {
@@ -15,13 +16,14 @@ public:
     {
         return mWindow;
     }
+    void InitResource();
     virtual void Update();
     void MouseMoveCallback(double xpos, double ypos);
     void MouseButtonCallback(int but, int action, int mods);
     void KeyCallback(int key, int scancode, int action, int mods);
     void ResizeCallback(int w, int h);
     void ScrollCallback(double xoff, double yoff);
-    
+
 protected:
     GLFWwindow *mWindow;
     int mWidth = 800, mHeight = 600;
@@ -31,16 +33,21 @@ protected:
     unsigned int triangle_VBO, triangle_VAO;
     unsigned int axes_VBO, axes_VAO;
     unsigned int pts_VBO, pts_VAO;
+    unsigned int ball_VAO, ball_VBO, ball_EBO;
     unsigned int shaderProgram;
     tVectorXf mPtVec;
-    Shader *ourShader;
+    Shader *normal_shader;
     CameraBasePtr mCam;
-
+    cPng2PointCloudPtr mPng2PointCloud;
+    tEigenArr<tVector3f> point_coords;
+    unsigned int mBallNumIndices;
     virtual void InitCam();
     virtual void InitGL();
     virtual void InitAxesGL();
     virtual void InitPtsGL();
-    void UpdatePts();
+    virtual void InitBallGL();
+    void InitGLFormat();
+    
 };
 
 SIM_DECLARE_PTR(cRender);

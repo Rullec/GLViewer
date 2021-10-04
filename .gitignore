@@ -1,2 +1,8 @@
 .vscode
-build
+build*
+
+*png
+dlls
+lib
+includes
+*exe
