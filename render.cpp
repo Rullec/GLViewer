@@ -4,6 +4,7 @@
 
 cRender::cRender()
 {
+    mNumOfPts = 1;
 }
 cRender::~cRender()
 {
@@ -77,8 +78,9 @@ void cRender::Update()
     glDrawArrays(GL_LINES, 0, 6);
 
     glBindVertexArray(pts_VAO);
+    UpdatePts();
     // glDrawArrays(GL_LINES, 0, 100);
-    glDrawArrays(GL_POINTS, 0, 100);
+    glDrawArrays(GL_POINTS, 0, mNumOfPts);
 }
 
 void cRender::InitGL()
@@ -246,24 +248,24 @@ void cRender::ScrollCallback(double xoff, double yoff)
 
 void cRender::InitPtsGL()
 {
-    int num_of_pts = 100;
-    tVectorXf pts_vertices = tVectorXf::Zero(num_of_pts * 3 * 2);
+    int num_of_pts = mNumOfPts;
+    mPtVec = tVectorXf::Ones(num_of_pts * 3 * 2) * 0.1;
     for (int i = 0; i < num_of_pts; i++)
     {
-        pts_vertices[6 * i + 0] = float(i) * 0.01;
-        pts_vertices[6 * i + 1] = float(i) * 0.01;
-        pts_vertices[6 * i + 2] = float(i) * 0.01;
-        pts_vertices[6 * i + 3] = 1.0f;
-        pts_vertices[6 * i + 4] = 1.0f;
-        pts_vertices[6 * i + 5] = 1.0f;
+        // mPtVec[6 * i + 0] = float(i) * 0.01;
+        // mPtVec[6 * i + 1] = float(i) * 0.01;
+        // mPtVec[6 * i + 2] = float(i) * 0.01;
+        mPtVec[6 * i + 3] = 1.0f;
+        mPtVec[6 * i + 4] = 1.0f;
+        mPtVec[6 * i + 5] = 1.0f;
     }
-    std::cout << pts_vertices.transpose() << std::endl;
+    std::cout << mPtVec.transpose() << std::endl;
     glGenVertexArrays(1, &pts_VAO);
     glGenBuffers(1, &pts_VBO);
 
     glBindVertexArray(pts_VAO);
     glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pts_vertices.size(), pts_vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mPtVec.size(), mPtVec.data(), GL_STATIC_DRAW);
 
     // pos attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
@@ -272,4 +274,25 @@ void cRender::InitPtsGL()
     // color attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+}
+
+void cRender::UpdatePts()
+{
+    mNumOfPts += 1;
+    int num_of_pts = mNumOfPts;
+    tVectorXf new_pts_vertices = tVectorXf::Random(num_of_pts * 3 * 2);
+    new_pts_vertices.segment(0, 6 * (mNumOfPts - 1)) = mPtVec;
+    for (int i = 0; i < num_of_pts; i++)
+    {
+        // pts_vertices[6 * i + 0] = float(i) * 0.01;
+        // pts_vertices[6 * i + 1] = float(i) * 0.01;
+        // pts_vertices[6 * i + 2] = float(i) * 0.01;
+        new_pts_vertices[6 * i + 3] = 1.0f;
+        new_pts_vertices[6 * i + 4] = 1.0f;
+        new_pts_vertices[6 * i + 5] = 1.0f;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * new_pts_vertices.size(), new_pts_vertices.data(), GL_STATIC_DRAW);
+    mPtVec = new_pts_vertices;
 }

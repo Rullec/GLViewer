@@ -2,7 +2,7 @@
 #include "utils/DefUtil.h"
 #include "utils/GLUtil.h"
 #include "shader.h"
-
+#include "utils/MathUtil.h"
 SIM_DECLARE_CLASS_AND_PTR(CameraBase);
 
 class cRender
@@ -21,16 +21,18 @@ public:
     void KeyCallback(int key, int scancode, int action, int mods);
     void ResizeCallback(int w, int h);
     void ScrollCallback(double xoff, double yoff);
-
+    
 protected:
     GLFWwindow *mWindow;
     int mWidth = 800, mHeight = 600;
     int mStartX = 100, mStartY = 100;
+    int mNumOfPts;
     std::string mWindowName = "gl viewer";
     unsigned int triangle_VBO, triangle_VAO;
     unsigned int axes_VBO, axes_VAO;
     unsigned int pts_VBO, pts_VAO;
     unsigned int shaderProgram;
+    tVectorXf mPtVec;
     Shader *ourShader;
     CameraBasePtr mCam;
 
@@ -38,6 +40,7 @@ protected:
     virtual void InitGL();
     virtual void InitAxesGL();
     virtual void InitPtsGL();
+    void UpdatePts();
 };
 
 SIM_DECLARE_PTR(cRender);
