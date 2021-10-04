@@ -15,6 +15,7 @@ uniform UniformBufferObject ubo;
 void main()
 {
     gl_Position = ubo.proj *ubo.view *  ubo.model * vec4(aPos, 1.0);
+    gl_PointSize = 10;
     // gl_Position = ubo.model * vec4(aPos, 1.0);
     // gl_Position = vec4(aPos, 1.0);
     // vec4 res = ubo.model * vec4(aPos, 1.0)

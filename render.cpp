@@ -8,8 +8,8 @@ cRender::cRender()
 cRender::~cRender()
 {
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &triangle_VAO);
+    glDeleteBuffers(1, &triangle_VBO);
     // glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 }
@@ -31,7 +31,8 @@ void cRender::InitCam()
 void cRender::Init()
 {
     InitGL();
-
+    InitAxesGL();
+    InitPtsGL();
     InitCam();
 }
 
@@ -67,10 +68,17 @@ void cRender::Update()
     ourShader->setMat4("ubo.proj", glm_proj);
     // std::cout << "cur proj = \n" << eigen_proj << std::endl;
     mCam->MouseRotate();
-    glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    glBindVertexArray(triangle_VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
     //glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glBindVertexArray(axes_VAO);
+    glDrawArrays(GL_LINES, 0, 6);
+
+    glBindVertexArray(pts_VAO);
+    // glDrawArrays(GL_LINES, 0, 100);
+    glDrawArrays(GL_POINTS, 0, 100);
 }
 
 void cRender::InitGL()
@@ -102,9 +110,10 @@ void cRender::InitGL()
     glfwSetKeyCallback(mWindow, KeyEventCallback);
     glfwSetCursorPosCallback(mWindow, MouseMoveEventCallback);
     glfwSetMouseButtonCallback(mWindow, MouseButtonEventCallback);
+    glfwSetCursorPosCallback(mWindow, MouseMoveEventCallback);
     glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    glfwSetFramebufferSizeCallback(mWindow, ResizeCallback);
-    glfwSetScrollCallback(mWindow, ScrollCallback);
+    glfwSetFramebufferSizeCallback(mWindow, ResizeEventCallback);
+    glfwSetScrollCallback(mWindow, ScrollEventCallback);
     if (GLEW_OK != glewInit())
     {
         std::cout << "[errpr] glew init failed " << std::endl;
@@ -122,8 +131,7 @@ void cRender::InitGL()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    float vertices[] = {
-
+    float tri_vertices[] = {
         // positions         // colors
         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
         -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
@@ -134,28 +142,134 @@ void cRender::InitGL()
         0, 1, 2 // first Triangle
     };
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
+    // 1. generate VAO and VBO
+    glGenVertexArrays(1, &triangle_VAO);
+    glGenBuffers(1, &triangle_VBO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindVertexArray(triangle_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, triangle_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tri_vertices), tri_vertices, GL_STATIC_DRAW);
 
+    // pos attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     // color attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+}
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+void cRender::InitAxesGL()
+{
+    float axes_vertices[] = {
+        // positions         // colors
+        // X axis
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
 
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        100.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
+        // Y axis
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+
+        0.0f,
+        100.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+
+        // Z axis
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+
+        0.0f,
+        0.0f,
+        100.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+
+    };
+
+    // 1. generate VAO and VBO
+    glGenVertexArrays(1, &axes_VAO);
+    glGenBuffers(1, &axes_VBO);
+
+    glBindVertexArray(axes_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, axes_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(axes_vertices), axes_vertices, GL_STATIC_DRAW);
+
+    // pos attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+}
+
+void cRender::MouseMoveCallback(double xpos, double ypos)
+{
+    std::cout << "render move " << xpos << " " << ypos << std::endl;
+}
+void cRender::MouseButtonCallback(int but, int action, int mods)
+{
+}
+void cRender::KeyCallback(int key, int scancode, int action, int mods)
+{
+}
+void cRender::ResizeCallback(int w, int h)
+{
+}
+void cRender::ScrollCallback(double xoff, double yoff)
+{
+}
+
+void cRender::InitPtsGL()
+{
+    int num_of_pts = 100;
+    tVectorXf pts_vertices = tVectorXf::Zero(num_of_pts * 3 * 2);
+    for (int i = 0; i < num_of_pts; i++)
+    {
+        pts_vertices[6 * i + 0] = float(i) * 0.01;
+        pts_vertices[6 * i + 1] = float(i) * 0.01;
+        pts_vertices[6 * i + 2] = float(i) * 0.01;
+        pts_vertices[6 * i + 3] = 1.0f;
+        pts_vertices[6 * i + 4] = 1.0f;
+        pts_vertices[6 * i + 5] = 1.0f;
+    }
+    std::cout << pts_vertices.transpose() << std::endl;
+    glGenVertexArrays(1, &pts_VAO);
+    glGenBuffers(1, &pts_VBO);
+
+    glBindVertexArray(pts_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pts_vertices.size(), pts_vertices.data(), GL_STATIC_DRAW);
+
+    // pos attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 }

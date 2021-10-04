@@ -4,19 +4,19 @@
 #include "render.h"
 
 GLFWwindow *gWindow;
-
+cRender * gRender;
 int main()
 {
-    auto render = new cRender();
-    render->Init();
-    gWindow = render->GetWindow();
+    gRender = new cRender();
+    gRender->Init();
+    gWindow = gRender->GetWindow();
     // set up cameras
     while (!glfwWindowShouldClose(gWindow))
     {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        render->Update();
+        gRender->Update();
         // glBindVertexArray(0); // no need to unbind it every time
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -24,6 +24,6 @@ int main()
         glfwSwapBuffers(gWindow);
         glfwPollEvents();
     }
-    delete render;
+    delete gRender;
     glfwTerminate();
 }

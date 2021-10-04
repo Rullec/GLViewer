@@ -1,6 +1,9 @@
 #include "RenderCallback.h"
+#include "render.h"
+extern cRender * gRender;
 void MouseMoveEventCallback(GLFWwindow *window, double xpos, double ypos)
 {
+    gRender->MouseMoveCallback(xpos, ypos);
 }
 
 void MouseButtonEventCallback(GLFWwindow *window, int button, int action, int mods)
@@ -19,13 +22,13 @@ void KeyEventCallback(GLFWwindow *window, int key, int scancode, int action, int
 
 }
 
-void ResizeCallback(GLFWwindow *window, int w, int h)
+void ResizeEventCallback(GLFWwindow *window, int w, int h)
 {
     // gScene->Update();
     glfwSwapBuffers(window);
 }
 
-void ScrollCallback(GLFWwindow *window, double xoff, double yoff)
+void ScrollEventCallback(GLFWwindow *window, double xoff, double yoff)
 {
     // std::cout << "scroll: x y = " << xoff << " " << yoff << std::endl;
 }
