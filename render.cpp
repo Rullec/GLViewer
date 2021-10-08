@@ -20,6 +20,8 @@ void cRender::InitGLFormat()
 cRender::cRender()
 {
     mNumOfPts = 1;
+    mNeedToRedrawPointCloud = true;
+    mLeftButtonPress = false;
 }
 cRender::~cRender()
 {
@@ -43,11 +45,16 @@ void cRender::InitCam()
                                             near_plane_dist,
                                             far_plane_dist);
 }
-void cRender::Init()
+#include "utils/JsonUtil.h"
+void cRender::Init(std::string conf_path)
 {
+    Json::Value root;
+    SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
+    std::string png_path = cJsonUtil::ParseAsString("png_path", root);
+
     InitGL();
     InitAxesGL();
-    InitResource();
+    InitResource(png_path);
     InitPtsGL();
     InitCam();
     InitBallGL();
@@ -84,7 +91,7 @@ void cRender::Update()
     normal_shader->setMat4("ubo.view", glm_view);
     normal_shader->setMat4("ubo.proj", glm_proj);
     // std::cout << "cur proj = \n" << eigen_proj << std::endl;
-    mCam->MouseRotate();
+    // mCam->MouseRotate();
     glBindVertexArray(triangle_VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -93,15 +100,27 @@ void cRender::Update()
     glBindVertexArray(axes_VAO);
     glDrawArrays(GL_LINES, 0, 6);
 
-    glBindVertexArray(pts_VAO);
+    // glBindVertexArray(pts_VAO);
     // UpdatePts();
     // glDrawArrays(GL_LINES, 0, 100);
     glDrawArrays(GL_POINTS, 0, mNumOfPts);
 
-    glBindVertexArray(ball_VAO);
     // glDrawArrays(GL_TRIANGLES, 0, mNumOfVertexBall * 6);
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_EBO);
-    glDrawElements(GL_TRIANGLES, 1500, GL_UNSIGNED_INT, 0);
+
+    if (mNeedToRedrawPointCloud)
+    {
+        glBindVertexArray(ball_VAO);
+        tMatrix4f model = tMatrix4f::Identity();
+        for (auto &pt : point_coords)
+        {
+            model.block(0, 3, 3, 1) = pt;
+
+            normal_shader->setMat4("ubo.model", E2GLM(model));
+            glDrawElements(GL_TRIANGLES, mBallNumIndices, GL_UNSIGNED_INT, 0);
+        }
+        mNeedToRedrawPointCloud = true;
+    }
 }
 void cRender::InitGL()
 {
@@ -278,10 +297,34 @@ void cRender::InitAxesGL()
 
 void cRender::MouseMoveCallback(double xpos, double ypos)
 {
-    std::cout << "render move " << xpos << " " << ypos << std::endl;
+    // printf("mouse move to %f %f, left button %d\n", xpos, ypos, mLeftButtonPress);
+    if (mLeftButtonPress)
+    {
+        // printf("mouse move to %d %d\n", xpos, ypos);
+        mCam->MouseMove(xpos, ypos);
+    }
 }
-void cRender::MouseButtonCallback(int but, int action, int mods)
+void cRender::MouseButtonCallback(int button, int action, int mods)
 {
+    // std::cout << "button = " << button << std::endl;
+    // std::cout << "action = " << action << std::endl;
+    if (button == GLFW_MOUSE_BUTTON_1)
+    {
+        if (action == GLFW_RELEASE)
+        {
+            mLeftButtonPress = false;
+            mCam->ResetFlag();
+        }
+
+        else if (action == GLFW_PRESS)
+        {
+            mLeftButtonPress = true;
+            // if (mCamera->IsFirstMouse() == true)
+            // {
+            //     mCamera->MouseMove()
+            // }
+        }
+    }
 }
 void cRender::KeyCallback(int key, int scancode, int action, int mods)
 {
@@ -295,39 +338,40 @@ void cRender::ScrollCallback(double xoff, double yoff)
 
 void cRender::InitPtsGL()
 {
-    int num_of_pts = mNumOfPts;
-    mPtVec = tVectorXf::Ones(num_of_pts * 3 * 3) * 0.1;
-    for (int i = 0; i < num_of_pts; i++)
-    {
-        const tVector3f &cur_pt = point_coords[i];
-        mPtVec[9 * i + 0] = cur_pt[0];
-        mPtVec[9 * i + 1] = cur_pt[1];
-        mPtVec[9 * i + 2] = cur_pt[2];
-        mPtVec[9 * i + 3] = 1.0f;
-        mPtVec[9 * i + 4] = 1.0f;
-        mPtVec[9 * i + 5] = 1.0f;
-        mPtVec[9 * i + 6] = 0.0f;
-        mPtVec[9 * i + 7] = 0.0f;
-        mPtVec[9 * i + 8] = 0.0f;
-    }
-    // std::cout << mPtVec.transpose() << std::endl;
-    glGenVertexArrays(1, &pts_VAO);
-    glGenBuffers(1, &pts_VBO);
+    // int num_of_pts = mNumOfPts;
+    // mPtVec = tVectorXf::Ones(num_of_pts * 3 * 3) * 0.1;
+    // for (int i = 0; i < num_of_pts; i++)
+    // {
+    //     const tVector3f &cur_pt = point_coords[i];
+    //     mPtVec[9 * i + 0] = cur_pt[0];
+    //     mPtVec[9 * i + 1] = cur_pt[1];
+    //     mPtVec[9 * i + 2] = cur_pt[2];
+    //     mPtVec[9 * i + 3] = 1.0f;
+    //     mPtVec[9 * i + 4] = 1.0f;
+    //     mPtVec[9 * i + 5] = 1.0f;
+    //     mPtVec[9 * i + 6] = 0.0f;
+    //     mPtVec[9 * i + 7] = 0.0f;
+    //     mPtVec[9 * i + 8] = 0.0f;
+    // }
+    // // std::cout << mPtVec.transpose() << std::endl;
+    // glGenVertexArrays(1, &pts_VAO);
+    // glGenBuffers(1, &pts_VBO);
 
-    glBindVertexArray(pts_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mPtVec.size(), mPtVec.data(), GL_STATIC_DRAW);
+    // glBindVertexArray(pts_VAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mPtVec.size(), mPtVec.data(), GL_STATIC_DRAW);
 
-    // pos attribute
-    InitGLFormat();
+    // // pos attribute
+    // InitGLFormat();
 }
 
 #include "png2pointcloud.h"
 #include "utils/OpenCVUtil.h"
 
-void cRender::InitResource()
+void cRender::InitResource(std::string png_path)
 {
-    tMatrixXf depth_png = cOpencvUtil::LoadGrayscalePngEigen("depth0.png");
+    tMatrixXf depth_png = cOpencvUtil::LoadGrayscalePngEigen(png_path);
+    std::cout << "load resource png from " << png_path << std::endl;
     depth_png /= 255;
     // int height = 100;
     // int width = height;
@@ -389,9 +433,9 @@ void cRender::InitBallGL()
     for (int i = 0; i < v_array.size(); i++)
     {
         const auto &v = v_array[i];
-        render_buf[9 * i + 0] = v->mPos[0] * 1e-1;
-        render_buf[9 * i + 1] = v->mPos[1] * 1e-1;
-        render_buf[9 * i + 2] = v->mPos[2] * 1e-1;
+        render_buf[9 * i + 0] = v->mPos[0] * 1e-3;
+        render_buf[9 * i + 1] = v->mPos[1] * 1e-3;
+        render_buf[9 * i + 2] = v->mPos[2] * 1e-3;
         render_buf[9 * i + 3] = 1;
         render_buf[9 * i + 4] = 0;
         render_buf[9 * i + 5] = 0;

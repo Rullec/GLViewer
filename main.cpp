@@ -7,8 +7,9 @@ GLFWwindow *gWindow;
 cRender * gRender;
 int main()
 {
+    std::string conf_path = "config/conf.json";
     gRender = new cRender();
-    gRender->Init();
+    gRender->Init(conf_path);
     gWindow = gRender->GetWindow();
     // set up cameras
     while (!glfwWindowShouldClose(gWindow))

@@ -1,0 +1,23 @@
+{
+    "png_path": "captured.png",
+    "png_path_lst": [
+        {
+            "png_path": "E:\\export_data\\single_scene_pngs\\old0.png",
+            "name": "casted",
+            "color": [
+                255,
+                0,
+                0
+            ]
+        },
+        {
+            "png_path": "captured.png",
+            "name": "real",
+            "color": [
+                0,
+                255,
+                0
+            ]
+        }
+    ]
+}

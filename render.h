@@ -10,13 +10,13 @@ class cRender
 {
 public:
     explicit cRender();
-    virtual void Init();
+    virtual void Init(std::string conf_path);
     virtual ~cRender();
     virtual GLFWwindow *GetWindow()
     {
         return mWindow;
     }
-    void InitResource();
+    void InitResource(std::string png_path);
     virtual void Update();
     void MouseMoveCallback(double xpos, double ypos);
     void MouseButtonCallback(int but, int action, int mods);
@@ -32,7 +32,7 @@ protected:
     std::string mWindowName = "gl viewer";
     unsigned int triangle_VBO, triangle_VAO;
     unsigned int axes_VBO, axes_VAO;
-    unsigned int pts_VBO, pts_VAO;
+    // unsigned int pts_VBO, pts_VAO;
     unsigned int ball_VAO, ball_VBO, ball_EBO;
     unsigned int shaderProgram;
     tVectorXf mPtVec;
@@ -40,14 +40,15 @@ protected:
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
     tEigenArr<tVector3f> point_coords;
+    bool mNeedToRedrawPointCloud;
     unsigned int mBallNumIndices;
+    bool mLeftButtonPress;
     virtual void InitCam();
     virtual void InitGL();
     virtual void InitAxesGL();
     virtual void InitPtsGL();
     virtual void InitBallGL();
     void InitGLFormat();
-    
 };
 
 SIM_DECLARE_PTR(cRender);

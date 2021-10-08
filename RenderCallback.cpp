@@ -8,7 +8,7 @@ void MouseMoveEventCallback(GLFWwindow *window, double xpos, double ypos)
 
 void MouseButtonEventCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    // gScene->MouseButtonEvent(button, action, mods);
+    gRender->MouseButtonCallback(button, action, mods);
 }
 
 void ErrorCallback(int error, const char *description)
