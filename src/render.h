@@ -6,6 +6,18 @@
 SIM_DECLARE_CLASS_AND_PTR(CameraBase);
 SIM_DECLARE_CLASS_AND_PTR(cPng2PointCloud);
 
+struct tRenderObj
+{
+    unsigned int mVAO, mVBO, mEBO;
+    unsigned int mNumIndices;
+};
+struct tRenderScene
+{
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    std::string mName;
+    tEigenArr<tVector3f> mPointCloudArray;
+    int mNumOfPoint;
+};
 class cRender
 {
 public:
@@ -28,20 +40,22 @@ protected:
     GLFWwindow *mWindow;
     int mWidth = 800, mHeight = 600;
     int mStartX = 100, mStartY = 100;
-    int mNumOfPts;
+    // int mNumOfPts;
     std::string mWindowName = "gl viewer";
     unsigned int triangle_VBO, triangle_VAO;
     unsigned int axes_VBO, axes_VAO;
+    tRenderObj mBallObj;
     // unsigned int pts_VBO, pts_VAO;
-    unsigned int ball_VAO, ball_VBO, ball_EBO;
+    // unsigned int ball_VAO, ball_VBO, ball_EBO;
     unsigned int shaderProgram;
-    tVectorXf mPtVec;
-    Shader *normal_shader;
+    // tVectorXf mPtVec;
+    Shader *normal_shader, *ball_shader;
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
-    tEigenArr<tVector3f> point_coords;
-    bool mNeedToRedrawPointCloud;
-    unsigned int mBallNumIndices;
+    tRenderScene mRenderScene;
+    // tEigenArr<tVector3f> point_coords;
+    // bool mNeedToRedrawPointCloud;
+    // unsigned int mBallNumIndices;
     bool mLeftButtonPress;
     virtual void InitCam();
     virtual void InitGL();
@@ -49,6 +63,7 @@ protected:
     virtual void InitPtsGL();
     virtual void InitBallGL();
     void InitGLFormat();
+    void SetCamInShader(Shader *this_shader) const;
 };
 
 SIM_DECLARE_PTR(cRender);

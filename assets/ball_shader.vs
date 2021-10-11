@@ -1,11 +1,9 @@
 
 #version 330 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aColor;
-layout(location = 2) in vec3 aNormal;
+layout(location = 1) in vec3 aNormal;
 
 out vec3 ourColor;
-out vec3 ourNormal;
 
 struct UniformBufferObject
 {
@@ -16,9 +14,10 @@ struct UniformBufferObject
 
 uniform UniformBufferObject ubo;
 
+uniform vec3 ball_color;
 void main()
 {
-
+    vec3 aColor = ball_color;
     if (length(aNormal) > 1e-3)
     {
         vec3 lightPos = vec3(0, 10, 0);
@@ -57,8 +56,7 @@ void main()
         ourColor = aColor;
     }
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(aPos, 1.0);
-    gl_PointSize = 10;
-    ourNormal = aNormal;
+    // ourNormal = aNormal;
 
     // gl_Position = ubo.model * vec4(aPos, 1.0);
     // gl_Position = vec4(aPos, 1.0);

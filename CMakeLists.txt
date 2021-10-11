@@ -19,6 +19,7 @@ endif()
 # include path and lib path
 include_directories(./includes)
 include_directories(.)
+include_directories(./src)
 
 # find OPENGL
 find_package(OpenGL REQUIRED)
@@ -67,14 +68,15 @@ endif()
 set(GL_LIBS ${GLFW3_LIBRARY} ${GLEW_STATIC_LIBRARIES} ${OPENGL_LIBRARIES})
 
 # add sources
-add_subdirectory(./utils)
-add_subdirectory(./cameras)
-add_subdirectory(./geometries)
+add_subdirectory(./src/utils)
+add_subdirectory(./src/cameras)
+add_subdirectory(./src/geometries)
+add_subdirectory(./src/restore)
 
-set(libs utils_lib ${OpenCV_LIBS} geo_lib)
+set(libs utils_lib ${OpenCV_LIBS} geo_lib res_lib)
 
 
-add_executable(main ./main.cpp RenderCallback.cpp render.cpp png2pointcloud.cpp)
+add_executable(main ./main.cpp src/RenderCallback.cpp src/render.cpp)
 target_link_libraries(main ${GL_LIBS} cam_lib ${libs})
 
 

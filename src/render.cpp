@@ -6,21 +6,17 @@
 #include "geometries/Primitives.h"
 void cRender::InitGLFormat()
 {
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(3 * sizeof(float)));
+    // color or normal attribute attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // normal attribute
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
 }
 cRender::cRender()
 {
-    mNumOfPts = 1;
-    mNeedToRedrawPointCloud = true;
+    // mNumOfPts = 1;
+    // mNeedToRedrawPointCloud = true;
     mLeftButtonPress = false;
 }
 cRender::~cRender()
@@ -78,18 +74,10 @@ glm::mat4 E2GLM(const tMatrix4f &em)
 }
 void cRender::Update()
 {
-    normal_shader->use();
+    SetCamInShader(normal_shader);
+    SetCamInShader(ball_shader);
 
-    // ourShader->setMat4("model", glm::mat4(1.0f));
-    normal_shader->setMat4("ubo.model", glm::mat4(1.0f));
-    tMatrix4f eigen_view = this->mCam->ViewMatrix();
-    // eigen_view.setIdentity();
-    tMatrix4f eigen_proj = this->mCam->ProjMatrix(mWidth, mHeight, false);
-    // eigen_proj.setIdentity();
-    glm::mat4 glm_view = E2GLM(eigen_view);
-    glm::mat4 glm_proj = E2GLM(eigen_proj);
-    normal_shader->setMat4("ubo.view", glm_view);
-    normal_shader->setMat4("ubo.proj", glm_proj);
+    normal_shader->use();
     // std::cout << "cur proj = \n" << eigen_proj << std::endl;
     // mCam->MouseRotate();
     glBindVertexArray(triangle_VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
@@ -103,23 +91,25 @@ void cRender::Update()
     // glBindVertexArray(pts_VAO);
     // UpdatePts();
     // glDrawArrays(GL_LINES, 0, 100);
-    glDrawArrays(GL_POINTS, 0, mNumOfPts);
+    // glDrawArrays(GL_POINTS, 0, mNumOfPts);
 
     // glDrawArrays(GL_TRIANGLES, 0, mNumOfVertexBall * 6);
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_EBO);
 
-    if (mNeedToRedrawPointCloud)
+    // if (mNeedToRedrawPointCloud)
     {
-        glBindVertexArray(ball_VAO);
+        ball_shader->use();
+        ball_shader->setVec3("ball_color", glm::vec3(1.0f, 0.0f, 0.0f));
+        glBindVertexArray(mBallObj.mVAO);
         tMatrix4f model = tMatrix4f::Identity();
-        for (auto &pt : point_coords)
+        for (auto &pt : mRenderScene.mPointCloudArray)
         {
             model.block(0, 3, 3, 1) = pt;
 
-            normal_shader->setMat4("ubo.model", E2GLM(model));
-            glDrawElements(GL_TRIANGLES, mBallNumIndices, GL_UNSIGNED_INT, 0);
+            ball_shader->setMat4("ubo.model", E2GLM(model));
+            glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
         }
-        mNeedToRedrawPointCloud = true;
+        // mNeedToRedrawPointCloud = true;
     }
 }
 void cRender::InitGL()
@@ -168,15 +158,16 @@ void cRender::InitGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // link shaders
-    normal_shader = new Shader("assets/shader.vs", "assets/shader.fs");
+    normal_shader = new Shader("assets/normal_shader.vs", "assets/shader.fs");
+    ball_shader = new Shader("assets/ball_shader.vs", "assets/shader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float tri_vertices[] = {
         // positions         // colors          // normals
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
-        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f    // top
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
     };
     unsigned int indices[] = {
         // note that we start from 0!
@@ -199,90 +190,14 @@ void cRender::InitAxesGL()
 {
     float axes_vertices[] = {
         // positions         // colors
-        // X axis
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        100.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
 
-        100.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-
-        // Y axis
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-
-        0.0f,
-        100.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-
-        // Z axis
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-
-        // Z axis
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        100.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-
+        0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // X axis start
+        100.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // X axis end
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // Y axis start
+        0.0f, 100.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Y axis end
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   // Z axis sart
+        0.0f, 0.0f, 100.0f, 0.0f, 0.0f, 1.0f  // Z axis end
     };
-
     // 1. generate VAO and VBO
     glGenVertexArrays(1, &axes_VAO);
     glGenBuffers(1, &axes_VBO);
@@ -338,34 +253,9 @@ void cRender::ScrollCallback(double xoff, double yoff)
 
 void cRender::InitPtsGL()
 {
-    // int num_of_pts = mNumOfPts;
-    // mPtVec = tVectorXf::Ones(num_of_pts * 3 * 3) * 0.1;
-    // for (int i = 0; i < num_of_pts; i++)
-    // {
-    //     const tVector3f &cur_pt = point_coords[i];
-    //     mPtVec[9 * i + 0] = cur_pt[0];
-    //     mPtVec[9 * i + 1] = cur_pt[1];
-    //     mPtVec[9 * i + 2] = cur_pt[2];
-    //     mPtVec[9 * i + 3] = 1.0f;
-    //     mPtVec[9 * i + 4] = 1.0f;
-    //     mPtVec[9 * i + 5] = 1.0f;
-    //     mPtVec[9 * i + 6] = 0.0f;
-    //     mPtVec[9 * i + 7] = 0.0f;
-    //     mPtVec[9 * i + 8] = 0.0f;
-    // }
-    // // std::cout << mPtVec.transpose() << std::endl;
-    // glGenVertexArrays(1, &pts_VAO);
-    // glGenBuffers(1, &pts_VBO);
-
-    // glBindVertexArray(pts_VAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, pts_VBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mPtVec.size(), mPtVec.data(), GL_STATIC_DRAW);
-
-    // // pos attribute
-    // InitGLFormat();
 }
 
-#include "png2pointcloud.h"
+#include "restore/png2pointcloud.h"
 #include "utils/OpenCVUtil.h"
 
 void cRender::InitResource(std::string png_path)
@@ -377,7 +267,8 @@ void cRender::InitResource(std::string png_path)
     // int width = height;
     // depth_png
     // depth_map.setOnes();
-    mPng2PointCloud->Resource(depth_png, 59, mNumOfPts, point_coords);
+    mRenderScene.mName = "first_scene";
+    mPng2PointCloud->Resource(depth_png, 59, mRenderScene.mNumOfPoint, mRenderScene.mPointCloudArray);
 }
 
 void UpdateVertexNormalFromTriangleNormal(
@@ -433,16 +324,13 @@ void cRender::InitBallGL()
     for (int i = 0; i < v_array.size(); i++)
     {
         const auto &v = v_array[i];
-        render_buf[9 * i + 0] = v->mPos[0] * 1e-3;
-        render_buf[9 * i + 1] = v->mPos[1] * 1e-3;
-        render_buf[9 * i + 2] = v->mPos[2] * 1e-3;
-        render_buf[9 * i + 3] = 1;
-        render_buf[9 * i + 4] = 0;
-        render_buf[9 * i + 5] = 0;
-        render_buf[9 * i + 6] = v->mNormal[0];
-        render_buf[9 * i + 7] = v->mNormal[1];
-        render_buf[9 * i + 8] = v->mNormal[2];
-        std::cout << "normal = " << v->mNormal.transpose() << std::endl;
+        render_buf[6 * i + 0] = v->mPos[0] * 1e-3;
+        render_buf[6 * i + 1] = v->mPos[1] * 1e-3;
+        render_buf[6 * i + 2] = v->mPos[2] * 1e-3;
+        render_buf[6 * i + 3] = v->mNormal[0];
+        render_buf[6 * i + 4] = v->mNormal[1];
+        render_buf[6 * i + 5] = v->mNormal[2];
+        // std::cout << "normal = " << v->mNormal.transpose() << std::endl;
     }
 
     std::vector<unsigned int> indices(0);
@@ -453,21 +341,36 @@ void cRender::InitBallGL()
         indices.push_back(t->mId2);
     }
 
-    glGenVertexArrays(1, &ball_VAO);
-    glGenBuffers(1, &ball_VBO);
-    glGenBuffers(1, &ball_EBO);
+    glGenVertexArrays(1, &mBallObj.mVAO);
+    glGenBuffers(1, &mBallObj.mVBO);
+    glGenBuffers(1, &mBallObj.mEBO);
 
-    glBindVertexArray(ball_VAO);
+    glBindVertexArray(mBallObj.mVAO);
 
     // VBO
-    glBindBuffer(GL_ARRAY_BUFFER, ball_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mBallObj.mVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * render_buf.size(), render_buf.data(), GL_STATIC_DRAW);
 
     // EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ball_EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mBallObj.mEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
-    mBallNumIndices = indices.size();
+    mBallObj.mNumIndices = indices.size();
     // pos attribute
     InitGLFormat();
+}
+void cRender::SetCamInShader(Shader *this_shader) const
+{
+    this_shader->use();
+
+    // ourShader->setMat4("model", glm::mat4(1.0f));
+    this_shader->setMat4("ubo.model", glm::mat4(1.0f));
+    tMatrix4f eigen_view = this->mCam->ViewMatrix();
+    // eigen_view.setIdentity();
+    tMatrix4f eigen_proj = this->mCam->ProjMatrix(mWidth, mHeight, false);
+    // eigen_proj.setIdentity();
+    glm::mat4 glm_view = E2GLM(eigen_view);
+    glm::mat4 glm_proj = E2GLM(eigen_proj);
+    this_shader->setMat4("ubo.view", glm_view);
+    this_shader->setMat4("ubo.proj", glm_proj);
 }
