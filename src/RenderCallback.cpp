@@ -1,6 +1,6 @@
 #include "RenderCallback.h"
 #include "render.h"
-extern cRender * gRender;
+extern cRender *gRender;
 void MouseMoveEventCallback(GLFWwindow *window, double xpos, double ypos)
 {
     gRender->MouseMoveCallback(xpos, ypos);
@@ -19,7 +19,6 @@ void KeyEventCallback(GLFWwindow *window, int key, int scancode, int action, int
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
-
 }
 
 void ResizeEventCallback(GLFWwindow *window, int w, int h)
@@ -30,6 +29,7 @@ void ResizeEventCallback(GLFWwindow *window, int w, int h)
 
 void ScrollEventCallback(GLFWwindow *window, double xoff, double yoff)
 {
+    gRender->ScrollCallback(xoff, yoff);
     // std::cout << "scroll: x y = " << xoff << " " << yoff << std::endl;
 }
 

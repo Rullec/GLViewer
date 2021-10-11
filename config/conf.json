@@ -1,16 +1,55 @@
 {
-    "name": "hello_moto",
-    "png_path": "E:\\KinectCap\\output\\depth0.png",
-    "color": [
-        255,
+    "png_lst": [
+        {
+            "name": "raycast",
+            "png_path": "E:\\export_data\\single_scene_pngs\\0.png",
+            "color": [
+                1,
+                0,
+                0
+            ],
+            "raw_img_size": [
+                360,
+                640
+            ],
+            "enable_window": true,
+            "window_height_st": 90,
+            "window_width_st": 200,
+            "window_height_size": 180,
+            "window_width_size": 240
+        },
+        {
+            "name": "real",
+            "png_path": "E:\\KinectCap\\depth_dist\\cast_noshell.png",
+            "color": [
+                0,
+                1,
+                0
+            ],
+            "raw_img_size": [
+                360,
+                640
+            ],
+            "enable_window": true,
+            "window_height_st": 90,
+            "window_width_st": 200,
+            "window_height_size": 180,
+            "window_width_size": 240
+        }
+    ],
+    "camera_pos": [
+        0.036,
+        0.55,
+        0.437
+    ],
+    "camera_focus": [
+        0.014,
+        0.241,
+        0.0
+    ],
+    "camera_up": [
         0,
-        0
-    ],
-    "enable_window": true,
-    "raw_img_size": [
-        1280,
-        640
-    ],
-    "window_height_st": 1,
-    "window_width_st": 2
+        0.82,
+        -0.57
+    ]
 }

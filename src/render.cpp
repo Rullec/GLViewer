@@ -1,9 +1,10 @@
 #include "render.h"
+#include "utils/FileUtil.h"
 #include "cameras/ArcBallCamera.h"
 #include "RenderCallback.h"
 #include "utils/ObjUtil.h"
-
 #include "geometries/Primitives.h"
+double fov = 59;
 void cRender::InitGLFormat()
 {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
@@ -21,8 +22,8 @@ cRender::cRender()
 }
 cRender::~cRender()
 {
-    glDeleteVertexArrays(1, &triangle_VAO);
-    glDeleteBuffers(1, &triangle_VBO);
+    // glDeleteVertexArrays(1, &triangle_VAO);
+    // glDeleteBuffers(1, &triangle_VBO);
     // glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 }
@@ -30,7 +31,7 @@ cRender::~cRender()
 void cRender::InitCam()
 {
     tVector3f pos = tVector3f(1, 1, 1);
-    tVector3f center = tVector3f(0, 0, 0);
+    tVector3f center = tVector3f(0, 0.15, 0);
     tVector3f up = tVector3f(0, 1, 0);
     float near_plane_dist = 1e-3;
     float far_plane_dist = 1e2;
@@ -46,11 +47,60 @@ void cRender::Init(std::string conf_path)
 {
     Json::Value root;
     SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
-    std::string png_path = cJsonUtil::ParseAsString("png_path", root);
+    Json::Value png_lst = cJsonUtil::ParseAsValue("png_lst", root);
+    for (auto &x : png_lst)
+    {
+        tRenderResourcePtr new_res = std::make_shared<tRenderResource>(x);
+        mRenderScene.push_back(new_res);
+    }
 
+    mPngCamPos = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_pos", root)).segment(0, 3).cast<float>();
+    mPngCamFocus = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_focus", root)).segment(0, 3).cast<float>();
+    mPngCamUp = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_up", root)).segment(0, 3).cast<float>();
+    mPngCamUp = mPngCamUp.normalized();
+
+    std::cout << "raw pos = " << mPngCamPos.transpose() << std::endl;
+    std::cout << "raw focus = " << mPngCamFocus.transpose() << std::endl;
+    std::cout << "raw up = " << mPngCamUp.transpose() << std::endl;
+    // camera coords to world coords
+    {
+        // up : Y axis
+        // (focus - pos) : -Z axis
+        // X: Y.cross3(Z)
+        tVector3f Z = (mPngCamPos - mPngCamFocus).normalized();
+        // std::cout << "Z = " << Z.transpose() << std::endl;
+        mPngCamUp = mPngCamUp.dot(Z) * (-Z) + mPngCamUp;
+        // std::cout << "new up = " << mPngCamUp.transpose() << std::endl;
+        mPngCamUp.normalize();
+        tVector3f Y = mPngCamUp;
+        tVector3f X = (Y.cross(Z)).normalized();
+        tMatrix3f R = tMatrix3f::Zero();
+        R.col(0) = X;
+        R.col(1) = Y;
+        R.col(2) = Z;
+        // std::cout << "X = " << X.transpose() << " " << X.norm() << std::endl;
+        // std::cout << "Y = " << Y.transpose() << " " << Y.norm() << std::endl;
+        // std::cout << "Z = " << Z.transpose() << " " << Z.norm() << std::endl;
+        // std::cout << "R = \n"
+        //   << R << std::endl;
+        // std::cout << "RTR = \n"
+        //   << R.transpose() * R << std::endl;
+        // std::cout << "mPngCamPos = " << mPngCamPos.transpose() << std::endl;
+        // R = R.inverse();
+        for (auto &res : mRenderScene)
+        {
+            for (auto &x : res->mPointCloudArray)
+            {
+                x = R * x + mPngCamPos;
+            }
+        }
+    }
+    // std::cout << "cam pos = " << mPngCamPos.transpose() << std::endl;
+    // std::cout << "cam focus = " << mPngCamFocus.transpose() << std::endl;
+    // std::cout << "cam up = " << mPngCamUp.transpose() << std::endl;
     InitGL();
     InitAxesGL();
-    InitResource(png_path);
+
     InitPtsGL();
     InitCam();
     InitBallGL();
@@ -80,9 +130,9 @@ void cRender::Update()
     normal_shader->use();
     // std::cout << "cur proj = \n" << eigen_proj << std::endl;
     // mCam->MouseRotate();
-    glBindVertexArray(triangle_VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    // glBindVertexArray(triangle_VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
     //glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glBindVertexArray(axes_VAO);
@@ -99,15 +149,18 @@ void cRender::Update()
     // if (mNeedToRedrawPointCloud)
     {
         ball_shader->use();
-        ball_shader->setVec3("ball_color", glm::vec3(1.0f, 0.0f, 0.0f));
         glBindVertexArray(mBallObj.mVAO);
         tMatrix4f model = tMatrix4f::Identity();
-        for (auto &pt : mRenderScene.mPointCloudArray)
+        for (auto &res : this->mRenderScene)
         {
-            model.block(0, 3, 3, 1) = pt;
+            ball_shader->setVec3("ball_color", glm::vec3(res->mColor[0], res->mColor[1], res->mColor[2]));
+            for (auto &pt : res->mPointCloudArray)
+            {
+                model.block(0, 3, 3, 1) = pt;
 
-            ball_shader->setMat4("ubo.model", E2GLM(model));
-            glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
+                ball_shader->setMat4("ubo.model", E2GLM(model));
+                glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
+            }
         }
         // mNeedToRedrawPointCloud = true;
     }
@@ -163,24 +216,24 @@ void cRender::InitGL()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    float tri_vertices[] = {
-        // positions         // colors          // normals
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
-    };
-    unsigned int indices[] = {
-        // note that we start from 0!
-        0, 1, 2 // first Triangle
-    };
+    // float tri_vertices[] = {
+    //     // positions         // colors          // normals
+    //     0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
+    //     -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+    //     0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
+    // };
+    // unsigned int indices[] = {
+    //     // note that we start from 0!
+    //     0, 1, 2 // first Triangle
+    // };
 
-    // 1. generate VAO and VBO
-    glGenVertexArrays(1, &triangle_VAO);
-    glGenBuffers(1, &triangle_VBO);
+    // // 1. generate VAO and VBO
+    // glGenVertexArrays(1, &triangle_VAO);
+    // glGenBuffers(1, &triangle_VBO);
 
-    glBindVertexArray(triangle_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, triangle_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(tri_vertices), tri_vertices, GL_STATIC_DRAW);
+    // glBindVertexArray(triangle_VAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, triangle_VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(tri_vertices), tri_vertices, GL_STATIC_DRAW);
 
     // pos attribute
     InitGLFormat();
@@ -249,6 +302,10 @@ void cRender::ResizeCallback(int w, int h)
 }
 void cRender::ScrollCallback(double xoff, double yoff)
 {
+    if (yoff > 0)
+        mCam->MoveForward();
+    else
+        mCam->MoveBackward();
 }
 
 void cRender::InitPtsGL()
@@ -258,17 +315,11 @@ void cRender::InitPtsGL()
 #include "restore/png2pointcloud.h"
 #include "utils/OpenCVUtil.h"
 
-void cRender::InitResource(std::string png_path)
+void cRender::AddResource(const Json::Value &conf)
 {
-    tMatrixXf depth_png = cOpencvUtil::LoadGrayscalePngEigen(png_path);
-    std::cout << "load resource png from " << png_path << std::endl;
-    depth_png /= 255;
-    // int height = 100;
-    // int width = height;
-    // depth_png
-    // depth_map.setOnes();
-    mRenderScene.mName = "first_scene";
-    mPng2PointCloud->Resource(depth_png, 59, mRenderScene.mNumOfPoint, mRenderScene.mPointCloudArray);
+
+    // std::cout << "load resource png from " << png_path << std::endl;
+    // cPng2PointCloud::Resource(png_path, cam_vfov_deg, mRenderScene.mNumOfPoint, mRenderScene.mPointCloudArray);
 }
 
 void UpdateVertexNormalFromTriangleNormal(
@@ -373,4 +424,60 @@ void cRender::SetCamInShader(Shader *this_shader) const
     glm::mat4 glm_proj = E2GLM(eigen_proj);
     this_shader->setMat4("ubo.view", glm_view);
     this_shader->setMat4("ubo.proj", glm_proj);
+}
+
+tRenderResource::tRenderResource(const Json::Value &conf)
+{
+    mName = cJsonUtil::ParseAsString("name", conf);
+    mPngPath = cJsonUtil::ParseAsString("png_path", conf);
+    mColor = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("color", conf)).segment(0, 3).cast<float>();
+    mRawImgSize = cJsonUtil::ReadVectorJson(
+                      cJsonUtil::ParseAsValue("raw_img_size", conf))
+                      .segment(0, 2)
+                      .cast<int>();
+    mEnableWindow = cJsonUtil::ParseAsBool("enable_window", conf);
+    if (mEnableWindow)
+    {
+
+        int window_height_st = cJsonUtil::ParseAsInt("window_height_st", conf);
+        int window_width_st = cJsonUtil::ParseAsInt("window_width_st", conf);
+        int window_height_size = cJsonUtil::ParseAsInt("window_height_size", conf);
+        int window_width_size = cJsonUtil::ParseAsInt("window_width_size", conf);
+        mWindowSt[0] = window_height_st;
+        mWindowSt[1] = window_width_st;
+        mWindowSize[0] = window_height_size;
+        mWindowSize[1] = window_width_size;
+    }
+    // 1. load the png, check the shape
+    SIM_ASSERT(cFileUtil::ExistsFile(mPngPath) == true);
+    tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(mPngPath);
+    img /= 255;
+    if (mEnableWindow == true)
+
+    {
+        // the image must be windowed
+        SIM_ASSERT(img.rows() == mWindowSize[0]);
+        SIM_ASSERT(img.cols() == mWindowSize[1]);
+    }
+    else
+    {
+        // the image must be full, raw window
+        std::cout << "raw img size = " << mRawImgSize.transpose() << std::endl;
+        SIM_ASSERT(img.rows() == mRawImgSize[0]);
+        SIM_ASSERT(img.cols() == mRawImgSize[1]);
+    }
+
+    // 2. convert it to the resource
+    if (mEnableWindow == false)
+    {
+        cPng2PointCloud::ResourceWhole(img, fov, mNumOfPoint, mPointCloudArray);
+    }
+    else
+    {
+        cPng2PointCloud::ResourceWindow(img, fov,
+                                        mRawImgSize, mWindowSt,
+                                        mNumOfPoint,
+                                        mPointCloudArray);
+    }
+    SIM_INFO("load {} points from {}", mNumOfPoint, this->mPngPath);
 }

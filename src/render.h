@@ -3,6 +3,7 @@
 #include "utils/GLUtil.h"
 #include "shader.h"
 #include "utils/MathUtil.h"
+#include "utils/JsonUtil.h"
 SIM_DECLARE_CLASS_AND_PTR(CameraBase);
 SIM_DECLARE_CLASS_AND_PTR(cPng2PointCloud);
 
@@ -11,13 +12,25 @@ struct tRenderObj
     unsigned int mVAO, mVBO, mEBO;
     unsigned int mNumIndices;
 };
-struct tRenderScene
+
+struct tRenderResource
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    tRenderResource(const Json::Value &conf);
+
     std::string mName;
+    std::string mPngPath;
     tEigenArr<tVector3f> mPointCloudArray;
     int mNumOfPoint;
+    tVector3f mColor;
+
+    bool mEnableWindow;    // enable window
+    tVector2i mRawImgSize; // raw image size
+    tVector2i mWindowSt;   //  window st
+    tVector2i mWindowSize; // window size
 };
+SIM_DECLARE_PTR(tRenderResource);
+
 class cRender
 {
 public:
@@ -28,7 +41,7 @@ public:
     {
         return mWindow;
     }
-    void InitResource(std::string png_path);
+    void AddResource(const Json::Value &conf);
     virtual void Update();
     void MouseMoveCallback(double xpos, double ypos);
     void MouseButtonCallback(int but, int action, int mods);
@@ -42,7 +55,7 @@ protected:
     int mStartX = 100, mStartY = 100;
     // int mNumOfPts;
     std::string mWindowName = "gl viewer";
-    unsigned int triangle_VBO, triangle_VAO;
+    // unsigned int triangle_VBO, triangle_VAO;
     unsigned int axes_VBO, axes_VAO;
     tRenderObj mBallObj;
     // unsigned int pts_VBO, pts_VAO;
@@ -52,7 +65,8 @@ protected:
     Shader *normal_shader, *ball_shader;
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
-    tRenderScene mRenderScene;
+    std::vector<tRenderResourcePtr> mRenderScene;
+    tVector3f mPngCamPos, mPngCamFocus, mPngCamUp;
     // tEigenArr<tVector3f> point_coords;
     // bool mNeedToRedrawPointCloud;
     // unsigned int mBallNumIndices;
