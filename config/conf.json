@@ -35,6 +35,24 @@
             "window_width_st": 200,
             "window_height_size": 180,
             "window_width_size": 240
+        },
+        {
+            "name": "real_cloth",
+            "png_path": "E:\\KinectCap\\1008_good_output\\1008_tanligongduan\\1.png",
+            "color": [
+                0,
+                0,
+                1
+            ],
+            "raw_img_size": [
+                360,
+                640
+            ],
+            "enable_window": true,
+            "window_height_st": 90,
+            "window_width_st": 200,
+            "window_height_size": 180,
+            "window_width_size": 240
         }
     ],
     "camera_pos": [

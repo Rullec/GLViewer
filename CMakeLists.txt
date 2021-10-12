@@ -20,6 +20,7 @@ endif()
 include_directories(./includes)
 include_directories(.)
 include_directories(./src)
+include_directories(./imgui)
 
 # find OPENGL
 find_package(OpenGL REQUIRED)
@@ -72,11 +73,13 @@ add_subdirectory(./src/utils)
 add_subdirectory(./src/cameras)
 add_subdirectory(./src/geometries)
 add_subdirectory(./src/restore)
+add_subdirectory(./src/render)
+add_subdirectory(./imgui)
 
-set(libs utils_lib ${OpenCV_LIBS} geo_lib res_lib)
+set(libs utils_lib ${OpenCV_LIBS} geo_lib res_lib imgui_lib render_lib)
 
 
-add_executable(main ./main.cpp src/RenderCallback.cpp src/render.cpp)
+add_executable(main ./main.cpp)
 target_link_libraries(main ${GL_LIBS} cam_lib ${libs})
 
 

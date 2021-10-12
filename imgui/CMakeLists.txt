@@ -1,0 +1,10 @@
+add_library(imgui_lib
+imgui_draw.cpp
+imgui_demo.cpp
+imgui_tables.cpp
+imgui_widgets.cpp
+imgui.cpp
+# backends/imgui_impl_vulkan.cpp
+backends/imgui_impl_opengl3.cpp
+backends/imgui_impl_glfw.cpp
+)

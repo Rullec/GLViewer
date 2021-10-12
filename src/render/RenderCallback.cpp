@@ -1,6 +1,6 @@
 #include "RenderCallback.h"
-#include "render.h"
-extern cRender *gRender;
+#include "RenderImGui.h"
+extern cRenderImGui *gRender;
 void MouseMoveEventCallback(GLFWwindow *window, double xpos, double ypos)
 {
     gRender->MouseMoveCallback(xpos, ypos);

@@ -1,14 +1,14 @@
 #include <iostream>
 #include "utils/MathUtil.h"
 #include "utils/GLUtil.h"
-#include "render.h"
+#include "render/RenderImGui.h"
 
 GLFWwindow *gWindow;
-cRender * gRender;
+cRenderImGui * gRender;
 int main()
 {
     std::string conf_path = "config/conf.json";
-    gRender = new cRender();
+    gRender = new cRenderImGui();
     gRender->Init(conf_path);
     gWindow = gRender->GetWindow();
     // set up cameras

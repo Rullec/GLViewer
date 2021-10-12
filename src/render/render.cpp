@@ -1,4 +1,4 @@
-#include "render.h"
+#include "Render.h"
 #include "utils/FileUtil.h"
 #include "cameras/ArcBallCamera.h"
 #include "RenderCallback.h"
@@ -51,7 +51,7 @@ void cRender::Init(std::string conf_path)
     for (auto &x : png_lst)
     {
         tRenderResourcePtr new_res = std::make_shared<tRenderResource>(x);
-        mRenderScene.push_back(new_res);
+        mRenderResources.push_back(new_res);
     }
 
     mPngCamPos = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_pos", root)).segment(0, 3).cast<float>();
@@ -87,7 +87,7 @@ void cRender::Init(std::string conf_path)
         //   << R.transpose() * R << std::endl;
         // std::cout << "mPngCamPos = " << mPngCamPos.transpose() << std::endl;
         // R = R.inverse();
-        for (auto &res : mRenderScene)
+        for (auto &res : mRenderResources)
         {
             for (auto &x : res->mPointCloudArray)
             {
@@ -100,7 +100,6 @@ void cRender::Init(std::string conf_path)
     // std::cout << "cam up = " << mPngCamUp.transpose() << std::endl;
     InitGL();
     InitAxesGL();
-
     InitPtsGL();
     InitCam();
     InitBallGL();
@@ -151,7 +150,7 @@ void cRender::Update()
         ball_shader->use();
         glBindVertexArray(mBallObj.mVAO);
         tMatrix4f model = tMatrix4f::Identity();
-        for (auto &res : this->mRenderScene)
+        for (auto &res : this->mRenderResources)
         {
             ball_shader->setVec3("ball_color", glm::vec3(res->mColor[0], res->mColor[1], res->mColor[2]));
             for (auto &pt : res->mPointCloudArray)

@@ -41,17 +41,17 @@ public:
     {
         return mWindow;
     }
-    void AddResource(const Json::Value &conf);
+    virtual void AddResource(const Json::Value &conf);
     virtual void Update();
-    void MouseMoveCallback(double xpos, double ypos);
-    void MouseButtonCallback(int but, int action, int mods);
-    void KeyCallback(int key, int scancode, int action, int mods);
-    void ResizeCallback(int w, int h);
-    void ScrollCallback(double xoff, double yoff);
+    virtual void MouseMoveCallback(double xpos, double ypos);
+    virtual void MouseButtonCallback(int but, int action, int mods);
+    virtual void KeyCallback(int key, int scancode, int action, int mods);
+    virtual void ResizeCallback(int w, int h);
+    virtual void ScrollCallback(double xoff, double yoff);
 
 protected:
     GLFWwindow *mWindow;
-    int mWidth = 800, mHeight = 600;
+    int mWidth = 1200, mHeight = 800;
     int mStartX = 100, mStartY = 100;
     // int mNumOfPts;
     std::string mWindowName = "gl viewer";
@@ -65,7 +65,7 @@ protected:
     Shader *normal_shader, *ball_shader;
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
-    std::vector<tRenderResourcePtr> mRenderScene;
+    std::vector<tRenderResourcePtr> mRenderResources;
     tVector3f mPngCamPos, mPngCamFocus, mPngCamUp;
     // tEigenArr<tVector3f> point_coords;
     // bool mNeedToRedrawPointCloud;
@@ -76,8 +76,8 @@ protected:
     virtual void InitAxesGL();
     virtual void InitPtsGL();
     virtual void InitBallGL();
-    void InitGLFormat();
-    void SetCamInShader(Shader *this_shader) const;
+    virtual void InitGLFormat();
+    virtual void SetCamInShader(Shader *this_shader) const;
 };
 
 SIM_DECLARE_PTR(cRender);
