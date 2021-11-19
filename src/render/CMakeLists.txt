@@ -2,6 +2,7 @@ set(
     render_src
     RenderCallback.cpp
     Render.cpp
+    RenderResource.cpp
     RenderImGui.cpp
 )
 

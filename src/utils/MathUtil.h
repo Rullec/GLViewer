@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <random>
-
+#define M_PI 3.1415926535
 const int gInvalidIdx = -1;
 
 enum eRotationOrder

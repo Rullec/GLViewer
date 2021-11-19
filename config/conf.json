@@ -1,48 +1,58 @@
 {
+    "png_lst.bak": [],
     "png_lst": [
         {
-            "name": "raycast",
-            "png_path": "E:\\export_data\\single_scene_pngs\\0.png",
-            "color": [
-                1,
-                0,
-                0
-            ],
-            "raw_img_size": [
-                360,
-                640
-            ],
-            "enable_window": true,
-            "window_height_st": 90,
-            "window_width_st": 200,
-            "window_height_size": 180,
-            "window_width_size": 240
-        },
-        {
-            "name": "real",
-            "png_path": "E:\\KinectCap\\depth_dist\\cast_noshell.png",
-            "color": [
-                0,
-                1,
-                0
-            ],
-            "raw_img_size": [
-                360,
-                640
-            ],
-            "enable_window": true,
-            "window_height_st": 90,
-            "window_width_st": 200,
-            "window_height_size": 180,
-            "window_width_size": 240
-        },
-        {
             "name": "real_cloth",
-            "png_path": "E:\\KinectCap\\1008_good_output\\1008_tanligongduan\\1.png",
+            "png_path": "assets\\need_to_clean_depth_cufanggezi0_160.png",
+            // "png_path": "assets\\cufanggezi0_from_cons.png",
             "color": [
+                1,
                 0,
+                0
+            ],
+            "raw_img_size": [
+                360,
+                640
+            ],
+            "enable_window": true,
+            "window_height_st": 90,
+            "window_width_st": 200,
+            "window_height_size": 180,
+            "window_width_size": 240
+        }
+        // {
+        //     "name": "raycast",
+        //     "png_path": "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
+        //     "color": [
+        //         0,
+        //         1,
+        //         0
+        //     ],
+        //     "raw_img_size": [
+        //         360,
+        //         640
+        //     ],
+        //     "enable_window": true,
+        //     "window_height_st": 90,
+        //     "window_width_st": 200,
+        //     "window_height_size": 180,
+        //     "window_width_size": 240
+        // }
+    ],
+    "mesh_4view_lst.bak": [],
+    "mesh_4view_lst": [
+        {
+            "name": "raycast_mesh_view",
+            "png_path_lst": [
+                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
+                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\1.png",
+                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\2.png",
+                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\3.png"
+            ],
+            "color": [
+                1,
                 0,
-                1
+                0
             ],
             "raw_img_size": [
                 360,

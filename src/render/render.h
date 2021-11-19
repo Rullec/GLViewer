@@ -1,35 +1,8 @@
 #pragma once
-#include "utils/DefUtil.h"
-#include "utils/GLUtil.h"
-#include "shader.h"
-#include "utils/MathUtil.h"
-#include "utils/JsonUtil.h"
+#include "RenderResource.h"
+#include <deque>
 SIM_DECLARE_CLASS_AND_PTR(CameraBase);
 SIM_DECLARE_CLASS_AND_PTR(cPng2PointCloud);
-
-struct tRenderObj
-{
-    unsigned int mVAO, mVBO, mEBO;
-    unsigned int mNumIndices;
-};
-
-struct tRenderResource
-{
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    tRenderResource(const Json::Value &conf);
-
-    std::string mName;
-    std::string mPngPath;
-    tEigenArr<tVector3f> mPointCloudArray;
-    int mNumOfPoint;
-    tVector3f mColor;
-
-    bool mEnableWindow;    // enable window
-    tVector2i mRawImgSize; // raw image size
-    tVector2i mWindowSt;   //  window st
-    tVector2i mWindowSize; // window size
-};
-SIM_DECLARE_PTR(tRenderResource);
 
 class cRender
 {
@@ -65,7 +38,8 @@ protected:
     Shader *normal_shader, *ball_shader;
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
-    std::vector<tRenderResourcePtr> mRenderResources;
+    std::deque<bool> mEnableRenderResource; // enable render resource or not?
+    std::vector<tRenderResourceBasePtr> mRenderResources;
     tVector3f mPngCamPos, mPngCamFocus, mPngCamUp;
     // tEigenArr<tVector3f> point_coords;
     // bool mNeedToRedrawPointCloud;

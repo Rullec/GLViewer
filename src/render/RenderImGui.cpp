@@ -62,6 +62,7 @@ void cRenderImGui::InitGL()
 
 void cRenderImGui::Update()
 {
+
     cRender::Update();
     {
 
@@ -73,6 +74,7 @@ void cRenderImGui::Update()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // ImGui::ShowDemoWindow();
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         {
             {
@@ -92,7 +94,25 @@ void cRenderImGui::Update()
                 bool *p_open = &open;
 
                 ImGui::Begin("render setting", p_open, window_flags);
-                ImGui::Text("hello imgui");
+                // ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 0.7, 0.6, 1.00));
+                // ImGui::Text("hello imgui");
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.7, 0.6, 1.00));
+
+                // bool go = false, go1 = false;
+                // ImGui::Checkbox("check1", &go);
+                for (int i = 0; i < mRenderResources.size(); i++)
+                {
+                    auto res = mRenderResources[i];
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(
+                                                             res->mColor[0],
+                                                             res->mColor[1],
+                                                             res->mColor[2],
+                                                             1.0));
+                    // bool & enable = ;
+                    ImGui::Checkbox(res->mName.c_str(), &(mEnableRenderResource[i]));
+                    ImGui::PopStyleColor();
+                }
+                ImGui::PopStyleColor();
                 ImGui::End();
             }
         }
