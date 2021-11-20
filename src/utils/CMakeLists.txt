@@ -17,6 +17,7 @@ MathUtil2.cpp
 Rand.cpp
 TimeUtil.cpp
 SysUtil.cpp
+StringUtil.cpp
 LogUtil.cpp
 OpencvUtil.cpp
 ObjUtil.cpp

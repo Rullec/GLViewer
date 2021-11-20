@@ -47,14 +47,14 @@ void cRender::Init(std::string conf_path)
 {
     Json::Value root;
     SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
-    Json::Value png_lst = cJsonUtil::ParseAsValue("png_lst", root);
+    Json::Value resource_lst = cJsonUtil::ParseAsValue("resource_lst", root);
     Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
 
-    mEnableRenderResource.resize(png_lst.size() + mesh_4view_lst.size(), true);
-    std::cout << "[debug] png list num = " << png_lst.size() << std::endl;
+    mEnableRenderResource.resize(resource_lst.size() + mesh_4view_lst.size(), true);
+    std::cout << "[debug] resource single list num = " << resource_lst.size() << std::endl;
     std::cout << "[debug] mesh_4view list num = " << mesh_4view_lst.size() << std::endl;
 
-    for (auto &x : png_lst)
+    for (auto &x : resource_lst)
     {
         tRenderResourceBasePtr new_res = std::make_shared<tRenderResourceSingleImage>(x);
         mRenderResources.push_back(new_res);

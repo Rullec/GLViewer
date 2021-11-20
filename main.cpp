@@ -4,7 +4,7 @@
 #include "render/RenderImGui.h"
 
 GLFWwindow *gWindow;
-cRenderImGui * gRender;
+cRenderImGui *gRender;
 int main()
 {
     std::string conf_path = "config/conf.json";

@@ -11,32 +11,43 @@ struct tRenderObj
     unsigned int mNumIndices;
 };
 
+enum eRenderResourceType
+{
+    PNG_RENDER_RESOURCE_TYPE = 0,
+    TXT_RENDER_RESOURCE_TYPE,
+    NUM_RENDER_RESOURCE_TYPE
+};
+
 struct tRenderResourceBase
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     tRenderResourceBase(const Json::Value &conf);
+    static eRenderResourceType GetTypeFromPath(std::string name);
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
+
     std::string mName;
     tEigenArr<tVector3f> mPointCloudArray;
     int mNumOfPoint;
     tVector3f mColor;
-
     bool mEnableWindow;    // enable window
     tVector2i mRawImgSize; // raw image size
     tVector2i mWindowSt;   //  window st
     tVector2i mWindowSize; // window size
 };
+
 struct tRenderResourceSingleImage : public tRenderResourceBase
 {
     tRenderResourceSingleImage(const Json::Value &conf);
-    std::string mPngPath;
+    std::string mResourcePath;
+    eRenderResourceType mRenderResourceType;
 };
 
 struct tRenderResourceMesh4View : public tRenderResourceBase
 {
     tRenderResourceMesh4View(const Json::Value &conf);
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
-    std::vector<std::string> mPngPathList;
+    std::vector<std::string> mResourcePathList;
+    std::vector<eRenderResourceType> mResourceTypeList;
 };
 
 // SIM_DECLARE_PTR(tRenderResourceSingleImage);

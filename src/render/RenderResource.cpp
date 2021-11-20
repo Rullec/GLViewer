@@ -2,21 +2,92 @@
 #include "restore/png2pointcloud.h"
 #include "utils/OpenCVUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/StringUtil.h"
 extern double fov;
 
+/**
+ * \brief            load depth from txt, return in meter unit
+*/
+tMatrixXf LoadTxtDepthMeter(const std::string &path)
+{
+    std::string content = cFileUtil::ReadTextFile(path);
+    // std::cout << "content = " << content << std::endl;
+    std::vector<std::string> lines = cStringUtil::SplitString(content, "\n");
+    cStringUtil::RemoveEmptyLine(lines);
+    lines.erase(lines.begin());
+
+    std::vector<std::vector<float>> imgs = {};
+    for (auto &line : lines)
+    {
+        auto nums = cStringUtil::SplitString(line, " ");
+        cStringUtil::RemoveEmptyLine(nums);
+        std::vector<float> floats = {};
+        for (auto &x : nums)
+        {
+            floats.push_back(std::stof(x));
+        }
+        if (imgs.size() != 0)
+        {
+            int cur_size = floats.size();
+            int pre_size = imgs[imgs.size() - 1].size();
+            if (cur_size != pre_size)
+            {
+                SIM_ERROR("cur size {} != pre size {}, parse depth image failed", cur_size, pre_size);
+            }
+        }
+        imgs.push_back(floats);
+    }
+
+    tMatrixXf img = tMatrixXf::Zero(imgs.size(), imgs[0].size());
+    for (int i = 0; i < imgs.size(); i++)
+    {
+        for (int j = 0; j < imgs[0].size(); j++)
+        {
+            img(i, j) = imgs[i][j];
+        }
+    }
+    std::cout << "parse text file img = " << img.rows() << " " << img.cols() << std::endl;
+    return img;
+    // for (int i = 0; i < lines.size(); i++)
+    // {
+    //     auto &line = lines[i];
+    //     std::cout << "line " << i << " = " << line << std::endl;
+    // }
+    return tMatrixXf::Zero(0, 0);
+}
 tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf) : tRenderResourceBase(conf)
 {
-    mPngPath = cJsonUtil::ParseAsString("png_path", conf);
+    mResourcePath = cJsonUtil::ParseAsString("resource_path", conf);
     // 1. load the png, check the shape
-    SIM_ASSERT(cFileUtil::ExistsFile(mPngPath) == true);
-    tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(mPngPath);
-    img /= 255;
-    if (mEnableWindow == true)
+    SIM_ASSERT(cFileUtil::ExistsFile(mResourcePath) == true);
+    mRenderResourceType = GetTypeFromPath(mResourcePath);
+    tMatrixXf img = tMatrixXf::Zero(0, 0);
+    switch (mRenderResourceType)
+    {
+    case eRenderResourceType::PNG_RENDER_RESOURCE_TYPE:
+    {
+        img = cOpencvUtil::LoadGrayscalePngEigen(mResourcePath);
+        img /= 255;
+    }
+    break;
+    case eRenderResourceType::TXT_RENDER_RESOURCE_TYPE:
+    {
+        img = LoadTxtDepthMeter(mResourcePath);
+        // SIM_ERROR("need to work on txt resource");
+        // exit(1);
+    }
+    break;
+    default:
+        SIM_ERROR("no policy can work for type {}", this->mRenderResourceType);
+        exit(1);
+    }
 
+    if (mEnableWindow == true)
     {
         // the image must be windowed
         SIM_ASSERT(img.rows() == mWindowSize[0]);
         SIM_ASSERT(img.cols() == mWindowSize[1]);
+        
     }
     else
     {
@@ -38,22 +109,22 @@ tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf) 
                                         mNumOfPoint,
                                         mPointCloudArray);
     }
-    SIM_INFO("load {} points from {}", mNumOfPoint, this->mPngPath);
+    SIM_INFO("load {} points from {}", mNumOfPoint, this->mResourcePath);
 }
 
 tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf)
     : tRenderResourceBase(conf)
 {
-    mPngPathList.clear();
+    mResourcePathList.clear();
 
     // 1. load the png, check the shape
-    Json::Value png_path_lst_json = cJsonUtil::ParseAsValue("png_path_lst", conf);
+    Json::Value resource_path_lst_json = cJsonUtil::ParseAsValue("resource_path_lst", conf);
     mNumOfPoint = 0;
     mPointCloudArray.clear();
-    for (int i = 0; i < png_path_lst_json.size(); i++)
+    for (int i = 0; i < resource_path_lst_json.size(); i++)
     {
-        std::string cur_str = png_path_lst_json[i].asString();
-        mPngPathList.push_back(cur_str);
+        std::string cur_str = resource_path_lst_json[i].asString();
+        mResourcePathList.push_back(cur_str);
         SIM_ASSERT(cFileUtil::ExistsFile(cur_str) == true);
         tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(cur_str);
         img /= 255;
@@ -91,8 +162,31 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf)
             mPointCloudArray.push_back(cur_point_cloud_array[j]);
         }
     }
-    // SIM_INFO("load {} points from {}, {}, {}, {}", mNumOfPoint, mPngPathList[0], mPngPathList[1], mPngPathList[2], mPngPathList[3]);
+    // SIM_INFO("load {} points from {}, {}, {}, {}", mNumOfPoint, mResourcePathList[0], mResourcePathList[1], mResourcePathList[2], mResourcePathList[3]);
 }
+
+/**
+ * \brief           Get type from path
+*/
+eRenderResourceType tRenderResourceBase::GetTypeFromPath(std::string name)
+{
+    std::string ext = cFileUtil::GetExtension(name);
+    if ("png" == ext)
+    {
+        return eRenderResourceType::PNG_RENDER_RESOURCE_TYPE;
+    }
+    else if ("txt" == ext)
+    {
+        return eRenderResourceType::TXT_RENDER_RESOURCE_TYPE;
+    }
+    else
+    {
+        SIM_ERROR("fail to get render resource type from path {}", name);
+        exit(1);
+    }
+    return eRenderResourceType::NUM_RENDER_RESOURCE_TYPE;
+}
+
 tRenderResourceBase::tRenderResourceBase(const Json::Value &conf)
 {
     mName = cJsonUtil::ParseAsString("name", conf);
@@ -104,7 +198,6 @@ tRenderResourceBase::tRenderResourceBase(const Json::Value &conf)
     mEnableWindow = cJsonUtil::ParseAsBool("enable_window", conf);
     if (mEnableWindow)
     {
-
         int window_height_st = cJsonUtil::ParseAsInt("window_height_st", conf);
         int window_width_st = cJsonUtil::ParseAsInt("window_width_st", conf);
         int window_height_size = cJsonUtil::ParseAsInt("window_height_size", conf);
@@ -148,15 +241,14 @@ void tRenderResourceBase::ApplyCameraPose(const tVector3f &cam_pos, const tVecto
 */
 void tRenderResourceMesh4View::ApplyCameraPose(const tVector3f &the_first_cam_pos, const tVector3f &cam_focus, const tVector3f &the_first_cam_up)
 {
-    SIM_ASSERT(mPngPathList.size() == 4);
+    SIM_ASSERT(mResourcePathList.size() == 4);
 
     // int num_of_images = 1;
     // for (int i = 0; i < num_of_images; i++)
-    for (int i = 0; i < mPngPathList.size(); i++)
+    for (int i = 0; i < mResourcePathList.size(); i++)
     {
-
         // tMatrix3f rotmat = cMathUtil::AxisAngleToRotmat(-tVector(0, 1, 0, 0) * i * M_PI / 2).topLeftCorner<3, 3>().cast<float>();
-        auto png_path = mPngPathList[i];
+        auto png_path = mResourcePathList[i];
         tVector3f cam_pos = the_first_cam_pos;
         tVector3f cam_up_ = the_first_cam_up;
         tVector3f Z = (cam_pos - cam_focus).normalized();

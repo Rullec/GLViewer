@@ -1,10 +1,8 @@
 {
-    "png_lst.bak": [],
-    "png_lst": [
+    "resource_lst": [
         {
-            "name": "real_cloth",
-            "png_path": "assets\\need_to_clean_depth_cufanggezi0_160.png",
-            // "png_path": "assets\\cufanggezi0_from_cons.png",
+            "name": "float_depth",
+            "resource_path": "assets\\depth_recons\\0.txt",
             "color": [
                 1,
                 0,
@@ -15,35 +13,35 @@
                 640
             ],
             "enable_window": true,
-            "window_height_st": 90,
+            "window_height_st": 105,
+            "window_width_st": 200,
+            "window_height_size": 180,
+            "window_width_size": 240
+        },
+        {
+            "name": "png_depth",
+            "resource_path": "assets\\depth_recons\\0.png",
+            "color": [
+                0,
+                1,
+                0
+            ],
+            "raw_img_size": [
+                360,
+                640
+            ],
+            "enable_window": true,
+            "window_height_st": 105,
             "window_width_st": 200,
             "window_height_size": 180,
             "window_width_size": 240
         }
-        // {
-        //     "name": "raycast",
-        //     "png_path": "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
-        //     "color": [
-        //         0,
-        //         1,
-        //         0
-        //     ],
-        //     "raw_img_size": [
-        //         360,
-        //         640
-        //     ],
-        //     "enable_window": true,
-        //     "window_height_st": 90,
-        //     "window_width_st": 200,
-        //     "window_height_size": 180,
-        //     "window_width_size": 240
-        // }
     ],
-    "mesh_4view_lst.bak": [],
-    "mesh_4view_lst": [
+    "mesh_4view_lst": [],
+    "mesh_4view_lst.bak": [
         {
             "name": "raycast_mesh_view",
-            "png_path_lst": [
+            "resource_path_lst": [
                 "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
                 "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\1.png",
                 "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\2.png",
@@ -59,14 +57,14 @@
                 640
             ],
             "enable_window": true,
-            "window_height_st": 90,
+            "window_height_st": 105,
             "window_width_st": 200,
             "window_height_size": 180,
             "window_width_size": 240
         }
     ],
     "camera_pos": [
-        0.036,
+        0.059,
         0.55,
         0.437
     ],
