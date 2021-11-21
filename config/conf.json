@@ -1,5 +1,6 @@
 {
-    "resource_lst": [
+    "resource_lst": [],
+    "resource_lst.bak": [
         {
             "name": "float_depth",
             "resource_path": "assets\\depth_recons\\0.txt",
@@ -37,8 +38,8 @@
             "window_width_size": 240
         }
     ],
-    "mesh_4view_lst": [],
-    "mesh_4view_lst.bak": [
+    "mesh_4view_lst.bak": [],
+    "mesh_4view_lst": [
         {
             "name": "raycast_mesh_view",
             "resource_path_lst": [
@@ -77,5 +78,23 @@
         0,
         0.82,
         -0.57
-    ]
+    ],
+    "GUI_configuration": {
+        "gui_cam_pos": [
+            0,
+            0.1,
+            0.2
+        ],
+        "gui_cam_focus": [
+            0,
+            0.1,
+            0
+        ],
+        "gui_cam_up": [
+            0,
+            1,
+            0
+        ]
+    },
+    "transform_obj_to_world_coords": true
 }

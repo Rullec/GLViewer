@@ -24,7 +24,7 @@ struct tRenderResourceBase
     tRenderResourceBase(const Json::Value &conf);
     static eRenderResourceType GetTypeFromPath(std::string name);
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
-
+    virtual void CalcAABB(tVector3f & aabb_min, tVector3f & aabb_max);
     std::string mName;
     tEigenArr<tVector3f> mPointCloudArray;
     int mNumOfPoint;

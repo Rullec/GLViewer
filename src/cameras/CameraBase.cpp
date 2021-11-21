@@ -33,6 +33,11 @@ CameraBase::CameraBase(const tVector3f &pos, const tVector3f &center,
     mFovDeg = fov;
     mNearPlane = near_plane;
     mFarPlane = far_plane;
+
+    mCamInitPos = mCamPos;
+    mCamInitCenter = mCamCenter;
+    mCamInitUp = mCamUp;
+    mCamInitFront = mCamFront;
 }
 CameraBase::~CameraBase() {}
 eCameraType CameraBase::GetType() const { return mType; }
@@ -50,6 +55,14 @@ void CameraBase::SetXY(float mouse_x, float mouse_y)
     last_y = mouse_y;
 }
 void CameraBase::ResetFlag() { first_mouse = true; }
+
+void CameraBase::ResetPos()
+{
+    mCamPos = mCamInitPos;
+    mCamCenter = mCamInitCenter;
+    mCamUp = mCamInitUp;
+    mCamFront = mCamInitFront;
+}
 // void CameraBase::SetStatus()
 // {
 

@@ -28,13 +28,15 @@ cRender::~cRender()
     glDeleteProgram(shaderProgram);
 }
 
-void cRender::InitCam()
+void cRender::InitCam(const Json::Value &conf)
 {
-    tVector3f pos = tVector3f(1, 1, 1);
-    tVector3f center = tVector3f(0, 0.15, 0);
-    tVector3f up = tVector3f(0, 1, 0);
+
+    tVector3f pos = cJsonUtil::ReadVectorJson(conf["gui_cam_pos"]).segment(0, 3).cast<float>();
+    tVector3f center = cJsonUtil::ReadVectorJson(conf["gui_cam_focus"]).segment(0, 3).cast<float>();
+    tVector3f up = cJsonUtil::ReadVectorJson(conf["gui_cam_up"]).segment(0, 3).cast<float>();
     float near_plane_dist = 1e-3;
     float far_plane_dist = 1e2;
+
     mCam = std::make_shared<cArcBallCamera>(pos,
                                             center,
                                             up,
@@ -73,51 +75,21 @@ void cRender::Init(std::string conf_path)
     std::cout << "raw pos = " << mPngCamPos.transpose() << std::endl;
     std::cout << "raw focus = " << mPngCamFocus.transpose() << std::endl;
     std::cout << "raw up = " << mPngCamUp.transpose() << std::endl;
+    mEnableTransformDepthImageToWorldCoords = cJsonUtil::ParseAsBool("transform_obj_to_world_coords", root);
+
     // camera coords to world coords
+    if (this->mEnableTransformDepthImageToWorldCoords == true)
     {
-        // up : Y axis
-        // (focus - pos) : -Z axis
-        // X: Y.cross3(Z)
-        // tVector3f Z = (mPngCamPos - mPngCamFocus).normalized();
-        // // std::cout << "Z = " << Z.transpose() << std::endl;
-        // mPngCamUp = mPngCamUp.dot(Z) * (-Z) + mPngCamUp;
-        // // std::cout << "new up = " << mPngCamUp.transpose() << std::endl;
-        // mPngCamUp.normalize();
-        // tVector3f Y = mPngCamUp;
-        // tVector3f X = (Y.cross(Z)).normalized();
-        // tMatrix3f R = tMatrix3f::Zero();
-        // R.col(0) = X;
-        // R.col(1) = Y;
-        // R.col(2) = Z;
-        // std::cout << "X = " << X.transpose() << " " << X.norm() << std::endl;
-        // std::cout << "Y = " << Y.transpose() << " " << Y.norm() << std::endl;
-        // std::cout << "Z = " << Z.transpose() << " " << Z.norm() << std::endl;
-        // std::cout << "R = \n"
-        //   << R << std::endl;
-        // std::cout << "RTR = \n"
-        //   << R.transpose() * R << std::endl;
-        // std::cout << "mPngCamPos = " << mPngCamPos.transpose() << std::endl;
-        // R = R.inverse();
         for (auto &res : mRenderResources)
         {
             res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
-            // for (auto &x : res->mPointCloudArray)
-            // {
-            //     x = R * x + mPngCamPos;
-            // }
         }
-        // std::cout << "[outer] R = \n"
-        //           << R << std::endl;
-        // std::cout << "[outer] cam_pos = " << mPngCamPos.transpose() << std::endl;
     }
-    // exit(1);
-    // std::cout << "cam pos = " << mPngCamPos.transpose() << std::endl;
-    // std::cout << "cam focus = " << mPngCamFocus.transpose() << std::endl;
-    // std::cout << "cam up = " << mPngCamUp.transpose() << std::endl;
+
     InitGL();
     InitAxesGL();
     InitPtsGL();
-    InitCam();
+    InitCam(root["GUI_configuration"]);
     InitBallGL();
 }
 

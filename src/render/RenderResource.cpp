@@ -87,7 +87,6 @@ tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf) 
         // the image must be windowed
         SIM_ASSERT(img.rows() == mWindowSize[0]);
         SIM_ASSERT(img.cols() == mWindowSize[1]);
-        
     }
     else
     {
@@ -271,5 +270,28 @@ void tRenderResourceMesh4View::ApplyCameraPose(const tVector3f &the_first_cam_po
             mPointCloudArray[j] = rotmat_again * mPointCloudArray[j];
         }
         std::cout << "png path = " << png_path << std::endl;
+    }
+}
+
+/**
+ * \brief               calculate AABB for rendering resource
+*/
+void tRenderResourceBase::CalcAABB(tVector3f &aabb_min, tVector3f &aabb_max)
+{
+    aabb_min = tVector3f::Ones() * std::numeric_limits<float>::max();
+    aabb_max = -tVector3f::Ones() * std::numeric_limits<float>::max();
+    for (auto &x : mPointCloudArray)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (x[i] > aabb_max[i])
+            {
+                aabb_max[i] = x[i];
+            }
+            if (x[i] < aabb_min[i])
+            {
+                aabb_min[i] = x[i];
+            }
+        }
     }
 }

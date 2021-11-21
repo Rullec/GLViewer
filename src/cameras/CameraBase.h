@@ -45,6 +45,7 @@ public:
     virtual void MouseMove(float mouse_x, float mouse_y) = 0;
     virtual void SetXY(float mouse_x, float mouse_y);
     virtual void ResetFlag();
+    virtual void ResetPos();
 
     virtual void SetKeyAcc(double acc);
     virtual void SetMouseAcc(double acc);
@@ -54,9 +55,11 @@ public:
                                             int height, int width);
 
     virtual void MouseRotate();
+
 protected:
     eCameraType mType;
     tVector3f mCamPos, mCamCenter, mCamUp, mCamFront;
+    tVector3f mCamInitPos, mCamInitCenter, mCamInitUp, mCamInitFront;
     float mNearPlane, mFarPlane;
     float mFovDeg;
     float mouse_acc;

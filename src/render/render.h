@@ -41,11 +41,12 @@ protected:
     std::deque<bool> mEnableRenderResource; // enable render resource or not?
     std::vector<tRenderResourceBasePtr> mRenderResources;
     tVector3f mPngCamPos, mPngCamFocus, mPngCamUp;
+    bool mEnableTransformDepthImageToWorldCoords; // enable transofrm depth image to wrold coords or not
     // tEigenArr<tVector3f> point_coords;
     // bool mNeedToRedrawPointCloud;
     // unsigned int mBallNumIndices;
     bool mLeftButtonPress;
-    virtual void InitCam();
+    virtual void InitCam(const Json::Value &conf);
     virtual void InitGL();
     virtual void InitAxesGL();
     virtual void InitPtsGL();
