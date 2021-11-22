@@ -15,10 +15,10 @@
             "type": "multi_view_image",
             "name": "raycast_mesh_view",
             "resource_path_lst": [
-                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
-                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\1.png",
-                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\2.png",
-                "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\3.png"
+                "E:\\SimpleClothSimulator\\learning\\image_network_test_data_archive\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons0\\0.png",
+                "E:\\SimpleClothSimulator\\learning\\image_network_test_data_archive\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons0\\1.png",
+                "E:\\SimpleClothSimulator\\learning\\image_network_test_data_archive\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons0\\2.png",
+                "E:\\SimpleClothSimulator\\learning\\image_network_test_data_archive\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons0\\3.png"
             ],
             "color": [
                 1,

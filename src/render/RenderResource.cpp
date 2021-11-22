@@ -180,7 +180,11 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf, tIma
     {
         std::string cur_str = resource_path_lst_json[i].asString();
         mResourcePathList.push_back(cur_str);
-        SIM_ASSERT(cFileUtil::ExistsFile(cur_str) == true);
+        if (cFileUtil::ExistsFile(cur_str) == false)
+        {
+            SIM_ERROR("{} doesn't exist", cur_str);
+            exit(1);
+        }
         tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(cur_str);
         img /= 255;
         if (mFormat->mEnableWindow == true)

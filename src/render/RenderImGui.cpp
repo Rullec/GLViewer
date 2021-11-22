@@ -134,7 +134,7 @@ void cRenderImGui::Update()
                             std::string pos_name = "adjust Y [" + std::to_string(i) + "] [cm]";
                             std::string ang_name = "adjust Y [" + std::to_string(i) + "] [rad]";
                             // ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
-                            ImGui::DragFloat(pos_name.c_str(), pos_val + 1, 0.1, -20, 20);
+                            ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
                             ImGui::DragFloat(ang_name.c_str(), &y_rot, 0.01, -3.14, 3.14);
 
                             res->SetPos(tVector3f(pos_val[0], pos_val[1], pos_val[2]) / tran_scale);
