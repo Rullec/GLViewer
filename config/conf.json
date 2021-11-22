@@ -1,46 +1,18 @@
 {
-    "resource_lst": [],
-    "resource_lst.bak": [
+    "image_format_info": {
+        "raw_img_size": [
+            360,
+            640
+        ],
+        "enable_window": true,
+        "window_height_st": 105,
+        "window_width_st": 200,
+        "window_height_size": 180,
+        "window_width_size": 240
+    },
+    "resource_lst": [
         {
-            "name": "float_depth",
-            "resource_path": "assets\\depth_recons\\0.txt",
-            "color": [
-                1,
-                0,
-                0
-            ],
-            "raw_img_size": [
-                360,
-                640
-            ],
-            "enable_window": true,
-            "window_height_st": 105,
-            "window_width_st": 200,
-            "window_height_size": 180,
-            "window_width_size": 240
-        },
-        {
-            "name": "png_depth",
-            "resource_path": "assets\\depth_recons\\0.png",
-            "color": [
-                0,
-                1,
-                0
-            ],
-            "raw_img_size": [
-                360,
-                640
-            ],
-            "enable_window": true,
-            "window_height_st": 105,
-            "window_width_st": 200,
-            "window_height_size": 180,
-            "window_width_size": 240
-        }
-    ],
-    "mesh_4view_lst.bak": [],
-    "mesh_4view_lst": [
-        {
+            "type": "multi_view_image",
             "name": "raycast_mesh_view",
             "resource_path_lst": [
                 "E:\\SimpleClothSimulator\\learning\\20211119_cufanggeziduiqi\\29_cufanggezi_depth_from_recons\\0.png",
@@ -53,15 +25,35 @@
                 0,
                 0
             ],
-            "raw_img_size": [
-                360,
-                640
+            "image_format": "format0"
+        },
+        {
+            "type": "multi_view_image",
+            "name": "kinect_mesh_view_nofix",
+            "resource_path_lst": [
+                "assets\\cufanggezi_ps160\\0.png",
+                "assets\\cufanggezi_ps160\\1.png",
+                "assets\\cufanggezi_ps160\\2.png",
+                "assets\\cufanggezi_ps160\\3.png"
             ],
-            "enable_window": true,
-            "window_height_st": 105,
-            "window_width_st": 200,
-            "window_height_size": 180,
-            "window_width_size": 240
+            "color": [
+                0,
+                1,
+                0
+            ],
+            "image_format": "format0"
+        },
+        {
+            "type": "obj",
+            "name": "test_obj",
+            "color": [
+                1,
+                1,
+                0
+            ],
+            "obj_path": "assets\\recons_obj\\1121_cufanggezi_recons.obj",
+            "scale": 1e-1,
+            "random_sample": 0.2
         }
     ],
     "camera_pos": [
@@ -81,13 +73,13 @@
     ],
     "GUI_configuration": {
         "gui_cam_pos": [
-            0,
-            0.1,
-            0.2
+            0.3,
+            0.5,
+            0.3
         ],
         "gui_cam_focus": [
             0,
-            0.1,
+            0.2,
             0
         ],
         "gui_cam_up": [
@@ -95,6 +87,5 @@
             1,
             0
         ]
-    },
-    "transform_obj_to_world_coords": true
+    }
 }

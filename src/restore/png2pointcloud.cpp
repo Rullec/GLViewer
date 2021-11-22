@@ -51,10 +51,10 @@ void cPng2PointCloud::ResourceWhole(const tMatrixXf &depth_png, double cam_vfov_
     int width = depth_png.cols();
     double cam_hfov_deg = calculate_hfov(width, height, cam_vfov_deg);
     num_of_pts = 0;
-    std::cout << "[debug] height = " << height << std::endl;
-    std::cout << "[debug] width = " << width << std::endl;
-    std::cout << "[debug] vfov = " << cam_vfov_deg << std::endl;
-    std::cout << "[debug] hfov = " << cam_hfov_deg << std::endl;
+    // std::cout << "[debug] height = " << height << std::endl;
+    // std::cout << "[debug] width = " << width << std::endl;
+    // std::cout << "[debug] vfov = " << cam_vfov_deg << std::endl;
+    // std::cout << "[debug] hfov = " << cam_hfov_deg << std::endl;
 
     double cam_hfov_rad = cam_hfov_deg * gDegreesToRadians;
     double cam_vfov_rad = cam_vfov_deg * gDegreesToRadians;
@@ -88,8 +88,8 @@ void cPng2PointCloud::ResourceWhole(const tMatrixXf &depth_png, double cam_vfov_
 #include "utils/LogUtil.h"
 void cPng2PointCloud::ResourceWindow(const tMatrixXf &img, double cam_vfov_deg, const tVector2i &whole_image_size, const tVector2i &window_start, int &num_of_pts, tEigenArr<tVector3f> &pt_coords)
 {
-    std::cout << "[debug] img shape = " << img.rows() << " " << img.cols() << std::endl;
-    std::cout << "[debug] whole img size = " << whole_image_size.transpose() << std::endl;
+    // std::cout << "[debug] img shape = " << img.rows() << " " << img.cols() << std::endl;
+    // std::cout << "[debug] whole img size = " << whole_image_size.transpose() << std::endl;
 
     int raw_height = whole_image_size[0];
     int raw_width = whole_image_size[1];
@@ -99,8 +99,8 @@ void cPng2PointCloud::ResourceWindow(const tMatrixXf &img, double cam_vfov_deg, 
     int window_size_width = img.cols();
 
     double cam_hfov_deg = calculate_hfov(raw_width, raw_height, cam_vfov_deg);
-    std::cout << "vfov = " << cam_vfov_deg << std::endl;
-    std::cout << "hfov = " << cam_hfov_deg << std::endl;
+    // std::cout << "vfov = " << cam_vfov_deg << std::endl;
+    // std::cout << "hfov = " << cam_hfov_deg << std::endl;
     num_of_pts = 0;
 
     double cam_hfov_rad = cam_hfov_deg * gDegreesToRadians;

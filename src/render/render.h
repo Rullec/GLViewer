@@ -39,9 +39,10 @@ protected:
     CameraBasePtr mCam;
     cPng2PointCloudPtr mPng2PointCloud;
     std::deque<bool> mEnableRenderResource; // enable render resource or not?
+    std::deque<bool> mEnableTransformAdjust;
     std::vector<tRenderResourceBasePtr> mRenderResources;
     tVector3f mPngCamPos, mPngCamFocus, mPngCamUp;
-    bool mEnableTransformDepthImageToWorldCoords; // enable transofrm depth image to wrold coords or not
+    // bool mEnableTransformDepthImageToWorldCoords; // enable transofrm depth image to wrold coords or not
     // tEigenArr<tVector3f> point_coords;
     // bool mNeedToRedrawPointCloud;
     // unsigned int mBallNumIndices;

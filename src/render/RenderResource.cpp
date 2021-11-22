@@ -5,6 +5,30 @@
 #include "utils/StringUtil.h"
 extern double fov;
 
+const std::string gRenderResourceTypStr[eRenderResourceType::NUM_RESOURCE_TYPE] = {
+    "single_view_image",
+    "multi_view_image",
+    "obj"};
+tImageFormat::tImageFormat(const Json::Value &conf)
+{
+    mRawImgSize = cJsonUtil::ReadVectorJson(
+                      cJsonUtil::ParseAsValue("raw_img_size", conf))
+                      .segment(0, 2)
+                      .cast<int>();
+    mEnableWindow = cJsonUtil::ParseAsBool("enable_window", conf);
+    if (mEnableWindow)
+    {
+        int window_height_st = cJsonUtil::ParseAsInt("window_height_st", conf);
+        int window_width_st = cJsonUtil::ParseAsInt("window_width_st", conf);
+        int window_height_size = cJsonUtil::ParseAsInt("window_height_size", conf);
+        int window_width_size = cJsonUtil::ParseAsInt("window_width_size", conf);
+        mWindowSt[0] = window_height_st;
+        mWindowSt[1] = window_width_st;
+        mWindowSize[0] = window_height_size;
+        mWindowSize[1] = window_width_size;
+    }
+}
+
 /**
  * \brief            load depth from txt, return in meter unit
 */
@@ -55,22 +79,54 @@ tMatrixXf LoadTxtDepthMeter(const std::string &path)
     // }
     return tMatrixXf::Zero(0, 0);
 }
-tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf) : tRenderResourceBase(conf)
+
+#include "utils/ObjUtil.h"
+#include "geometries/Primitives.h"
+tRenderResourceObj::tRenderResourceObj(const Json::Value &conf)
+    : tRenderResourceBase(conf)
+{
+    mObjPath = cJsonUtil::ParseAsString("obj_path", conf);
+    // load the obj, into the vertices
+    mScale = cJsonUtil::ParseAsFloat("scale", conf);
+    mRandom = cJsonUtil::ParseAsFloat("random_sample", conf);
+    {
+        cObjUtil::tParams params;
+        params.mPath = mObjPath;
+        std::vector<tVertex *> v_array;
+        std::vector<tEdge *> e_array;
+        std::vector<tTriangle *> t_array;
+        cObjUtil::LoadObj(params, v_array, e_array, t_array);
+        mNumOfPoint = v_array.size();
+        mPointCloudArray.clear();
+        for (auto &v : v_array)
+        {
+            if (cMathUtil::RandDouble(0, 1) < mRandom)
+            {
+
+                mPointCloudArray.push_back(v->mPos.segment(0, 3).cast<float>() * mScale);
+            }
+        }
+        mNumOfPoint = mPointCloudArray.size();
+    }
+    std::cout << "[debug] load obj from " << mObjPath << " num of points " << mNumOfPoint << std::endl;
+}
+
+tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf, tImageFormatPtr ptr) : tRenderResourceImageBase(conf, ptr)
 {
     mResourcePath = cJsonUtil::ParseAsString("resource_path", conf);
     // 1. load the png, check the shape
     SIM_ASSERT(cFileUtil::ExistsFile(mResourcePath) == true);
-    mRenderResourceType = GetTypeFromPath(mResourcePath);
+    mRenderResourceType = GetImageTypeFromPath(mResourcePath);
     tMatrixXf img = tMatrixXf::Zero(0, 0);
     switch (mRenderResourceType)
     {
-    case eRenderResourceType::PNG_RENDER_RESOURCE_TYPE:
+    case eRenderResourceImageType::PNG_RENDER_RESOURCE_IMAGE_TYPE:
     {
         img = cOpencvUtil::LoadGrayscalePngEigen(mResourcePath);
         img /= 255;
     }
     break;
-    case eRenderResourceType::TXT_RENDER_RESOURCE_TYPE:
+    case eRenderResourceImageType::TXT_RENDER_RESOURCE_IMAGE_TYPE:
     {
         img = LoadTxtDepthMeter(mResourcePath);
         // SIM_ERROR("need to work on txt resource");
@@ -82,37 +138,37 @@ tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf) 
         exit(1);
     }
 
-    if (mEnableWindow == true)
+    if (ptr->mEnableWindow == true)
     {
         // the image must be windowed
-        SIM_ASSERT(img.rows() == mWindowSize[0]);
-        SIM_ASSERT(img.cols() == mWindowSize[1]);
+        SIM_ASSERT(img.rows() == ptr->mWindowSize[0]);
+        SIM_ASSERT(img.cols() == ptr->mWindowSize[1]);
     }
     else
     {
         // the image must be full, raw window
-        std::cout << "raw img size = " << mRawImgSize.transpose() << std::endl;
-        SIM_ASSERT(img.rows() == mRawImgSize[0]);
-        SIM_ASSERT(img.cols() == mRawImgSize[1]);
+        std::cout << "raw img size = " << ptr->mRawImgSize.transpose() << std::endl;
+        SIM_ASSERT(img.rows() == ptr->mRawImgSize[0]);
+        SIM_ASSERT(img.cols() == ptr->mRawImgSize[1]);
     }
 
     // 2. convert it to the resource
-    if (mEnableWindow == false)
+    if (ptr->mEnableWindow == false)
     {
         cPng2PointCloud::ResourceWhole(img, fov, mNumOfPoint, mPointCloudArray);
     }
     else
     {
         cPng2PointCloud::ResourceWindow(img, fov,
-                                        mRawImgSize, mWindowSt,
+                                        ptr->mRawImgSize, ptr->mWindowSt,
                                         mNumOfPoint,
                                         mPointCloudArray);
     }
     SIM_INFO("load {} points from {}", mNumOfPoint, this->mResourcePath);
 }
 
-tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf)
-    : tRenderResourceBase(conf)
+tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf, tImageFormatPtr ptr)
+    : tRenderResourceImageBase(conf, ptr)
 {
     mResourcePathList.clear();
 
@@ -127,31 +183,31 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf)
         SIM_ASSERT(cFileUtil::ExistsFile(cur_str) == true);
         tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(cur_str);
         img /= 255;
-        if (mEnableWindow == true)
+        if (mFormat->mEnableWindow == true)
 
         {
             // the image must be windowed
-            SIM_ASSERT(img.rows() == mWindowSize[0]);
-            SIM_ASSERT(img.cols() == mWindowSize[1]);
+            SIM_ASSERT(img.rows() == mFormat->mWindowSize[0]);
+            SIM_ASSERT(img.cols() == mFormat->mWindowSize[1]);
         }
         else
         {
             // the image must be full, raw window
-            std::cout << "raw img size = " << mRawImgSize.transpose() << std::endl;
-            SIM_ASSERT(img.rows() == mRawImgSize[0]);
-            SIM_ASSERT(img.cols() == mRawImgSize[1]);
+            std::cout << "raw img size = " << mFormat->mRawImgSize.transpose() << std::endl;
+            SIM_ASSERT(img.rows() == mFormat->mRawImgSize[0]);
+            SIM_ASSERT(img.cols() == mFormat->mRawImgSize[1]);
         }
         int num_of_point_cur = 0;
         // 2. convert it to the resource
         tEigenArr<tVector3f> cur_point_cloud_array(0);
-        if (mEnableWindow == false)
+        if (mFormat->mEnableWindow == false)
         {
             cPng2PointCloud::ResourceWhole(img, fov, num_of_point_cur, cur_point_cloud_array);
         }
         else
         {
             cPng2PointCloud::ResourceWindow(img, fov,
-                                            mRawImgSize, mWindowSt,
+                                            mFormat->mRawImgSize, mFormat->mWindowSt,
                                             num_of_point_cur,
                                             cur_point_cloud_array);
         }
@@ -161,57 +217,49 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf)
             mPointCloudArray.push_back(cur_point_cloud_array[j]);
         }
     }
+
     // SIM_INFO("load {} points from {}, {}, {}, {}", mNumOfPoint, mResourcePathList[0], mResourcePathList[1], mResourcePathList[2], mResourcePathList[3]);
 }
 
 /**
  * \brief           Get type from path
 */
-eRenderResourceType tRenderResourceBase::GetTypeFromPath(std::string name)
+eRenderResourceImageType tRenderResourceImageBase::GetImageTypeFromPath(std::string name)
 {
     std::string ext = cFileUtil::GetExtension(name);
     if ("png" == ext)
     {
-        return eRenderResourceType::PNG_RENDER_RESOURCE_TYPE;
+        return eRenderResourceImageType::PNG_RENDER_RESOURCE_IMAGE_TYPE;
     }
     else if ("txt" == ext)
     {
-        return eRenderResourceType::TXT_RENDER_RESOURCE_TYPE;
+        return eRenderResourceImageType::TXT_RENDER_RESOURCE_IMAGE_TYPE;
     }
     else
     {
         SIM_ERROR("fail to get render resource type from path {}", name);
         exit(1);
     }
-    return eRenderResourceType::NUM_RENDER_RESOURCE_TYPE;
+    return eRenderResourceImageType::NUM_RENDER_RESOURCE_IMAGE_TYPE;
 }
 
 tRenderResourceBase::tRenderResourceBase(const Json::Value &conf)
 {
     mName = cJsonUtil::ParseAsString("name", conf);
     mColor = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("color", conf)).segment(0, 3).cast<float>();
-    mRawImgSize = cJsonUtil::ReadVectorJson(
-                      cJsonUtil::ParseAsValue("raw_img_size", conf))
-                      .segment(0, 2)
-                      .cast<int>();
-    mEnableWindow = cJsonUtil::ParseAsBool("enable_window", conf);
-    if (mEnableWindow)
-    {
-        int window_height_st = cJsonUtil::ParseAsInt("window_height_st", conf);
-        int window_width_st = cJsonUtil::ParseAsInt("window_width_st", conf);
-        int window_height_size = cJsonUtil::ParseAsInt("window_height_size", conf);
-        int window_width_size = cJsonUtil::ParseAsInt("window_width_size", conf);
-        mWindowSt[0] = window_height_st;
-        mWindowSt[1] = window_width_st;
-        mWindowSize[0] = window_height_size;
-        mWindowSize[1] = window_width_size;
-    }
+    mTransform.setIdentity();
+}
+
+tRenderResourceImageBase::tRenderResourceImageBase(const Json::Value &conf, tImageFormatPtr ptr) : tRenderResourceBase(conf)
+{
+
+    mFormat = ptr;
 }
 
 /**
  * \brief           Apply camera pos, to change the point cloud array
 */
-void tRenderResourceBase::ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up_)
+void tRenderResourceImageBase::ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up_)
 {
     // up : Y axis
     // (focus - pos) : -Z axis
@@ -234,7 +282,33 @@ void tRenderResourceBase::ApplyCameraPose(const tVector3f &cam_pos, const tVecto
         x = R * x + cam_pos;
     }
 }
+void tRenderResourceBase::InitPointCloudArray()
+{
+    mInitPointCloudArray = mPointCloudArray;
+}
 
+void tRenderResourceBase::ApplyTransform()
+{
+    for (int i = 0; i < mNumOfPoint; i++)
+    {
+        mPointCloudArray[i] = (mTransform * cMathUtil::Expand(mInitPointCloudArray[i], 1)).segment(0, 3).cast<float>();
+    }
+}
+
+void tRenderResourceBase::SetPos(const tVector3f &new_pos)
+{
+    tVector3f now_res = this->mTransform.block(0, 3, 3, 1).cast<float>();
+    float diff = (new_pos - now_res).norm();
+    if (diff > 1e-6)
+    {
+        mTransform.block(0, 3, 3, 1) = new_pos.cast<double>();
+        ApplyTransform();
+    }
+}
+tVector3f tRenderResourceBase::GetPos() const
+{
+    return tVector3f(mTransform(0, 3), mTransform(1, 3), mTransform(2, 3));
+}
 /**
  * \brief           Apply camera pos, to change the point cloud array
 */
@@ -263,13 +337,14 @@ void tRenderResourceMesh4View::ApplyCameraPose(const tVector3f &the_first_cam_po
         R.col(2) = Z;
 
         int gap = int(this->mPointCloudArray.size() / 4);
-        tMatrix3f rotmat_again = cMathUtil::AxisAngleToRotmat(-tVector(0, 1, 0, 0) * i * M_PI / 2).topLeftCorner<3, 3>().cast<float>();
+        // tMatrix3f rotmat_again = cMathUtil::AxisAngleToRotmat(-tVector(0, 1, 0, 0) * i * M_PI / 2).topLeftCorner<3, 3>().cast<float>();
+        tMatrix3f rotmat_again = cMathUtil::AxisAngleToRotmat(tVector(0, 1, 0, 0) * i * M_PI / 2).topLeftCorner<3, 3>().cast<float>();
         for (int j = gap * i; j < gap * (i + 1); j++)
         {
             mPointCloudArray[j] = R * mPointCloudArray[j] + cam_pos;
             mPointCloudArray[j] = rotmat_again * mPointCloudArray[j];
         }
-        std::cout << "png path = " << png_path << std::endl;
+        // std::cout << "png path = " << png_path << std::endl;
     }
 }
 
@@ -294,4 +369,58 @@ void tRenderResourceBase::CalcAABB(tVector3f &aabb_min, tVector3f &aabb_max)
             }
         }
     }
+}
+
+/**
+ * \brief           build the rendering resource from string
+*/
+eRenderResourceType BuildRenderResourceTypeFromStr(std::string cur_type_str)
+{
+    for (int i = 0; i < eRenderResourceType::NUM_RESOURCE_TYPE; i++)
+    {
+
+        if (gRenderResourceTypStr[i] == cur_type_str)
+        {
+            return static_cast<eRenderResourceType>(i);
+        }
+    }
+    SIM_ERROR("failed to judge the render resource type from string {}", cur_type_str);
+    exit(1);
+    return eRenderResourceType::NUM_RESOURCE_TYPE;
+}
+
+/**
+ * \brief           build the rendering string  from resource
+*/
+std::string BuildStrFromRenderResourceType(eRenderResourceType cur_type)
+{
+    return gRenderResourceTypStr[cur_type];
+}
+
+/**
+ * \brief           set the rotate part
+*/
+void tRenderResourceBase::SetRotAxisAngle(const tVector3f &new_aa)
+{
+    tVector3f cur_aa = GetRotAxisAngle();
+    double diff_norm = (cur_aa - new_aa).norm();
+    if (diff_norm > 1e-3)
+    {
+        tMatrix new_trans = cMathUtil::AxisAngleToRotmat(cMathUtil::Expand(new_aa, 0));
+        mTransform.topLeftCorner<3, 3>() = new_trans.topLeftCorner<3, 3>();
+        ApplyTransform();
+    }
+}
+/**
+ * \brief           get the rotate part
+*/
+tVector3f tRenderResourceBase::GetRotAxisAngle() const
+{
+    tVector aa;
+    double theta;
+    cMathUtil::RotMatToAxisAngle(mTransform, aa, theta);
+    aa *= theta;
+
+    return aa.segment(0, 3).cast<float>();
+    ;
 }

@@ -50,20 +50,44 @@ void cRender::Init(std::string conf_path)
     Json::Value root;
     SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
     Json::Value resource_lst = cJsonUtil::ParseAsValue("resource_lst", root);
-    Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
+    // Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
 
-    mEnableRenderResource.resize(resource_lst.size() + mesh_4view_lst.size(), true);
-    std::cout << "[debug] resource single list num = " << resource_lst.size() << std::endl;
-    std::cout << "[debug] mesh_4view list num = " << mesh_4view_lst.size() << std::endl;
+    auto format_ptr = std::make_shared<tImageFormat>(cJsonUtil::ParseAsValue("image_format_info", root));
+    mEnableRenderResource.resize(resource_lst.size(), true);
+    mEnableTransformAdjust.resize(resource_lst.size(), true);
+    // std::cout << "[debug] resource single list num = " << resource_lst.size() << std::endl;
+    // std::cout << "[debug] mesh_4view list num = " << mesh_4view_lst.size() << std::endl;
 
     for (auto &x : resource_lst)
     {
-        tRenderResourceBasePtr new_res = std::make_shared<tRenderResourceSingleImage>(x);
-        mRenderResources.push_back(new_res);
-    }
-    for (auto &x : mesh_4view_lst)
-    {
-        tRenderResourceBasePtr new_res = std::make_shared<tRenderResourceMesh4View>(x);
+        std::string type_str = cJsonUtil::ParseAsString("type", x);
+        auto cur_type = BuildRenderResourceTypeFromStr(type_str);
+        tRenderResourceBasePtr new_res = nullptr;
+        switch (cur_type)
+        {
+        case eRenderResourceType::SINGLE_VIEW_IMAGE_RESOURCE_TYPE:
+        {
+            new_res = std::make_shared<tRenderResourceSingleImage>(x, format_ptr);
+        }
+        break;
+        case eRenderResourceType::MULTIVIEW_IMAGE_RESOURCE_TYPE:
+        {
+            new_res = std::make_shared<tRenderResourceMesh4View>(x, format_ptr);
+        }
+        break;
+        case eRenderResourceType::OBJ_RESOURCE_TYPE:
+        {
+            new_res = std::make_shared<tRenderResourceObj>(x);
+            // std::cout << "need to support for obj resource\n";
+            // exit(1);
+        }
+        break;
+        default:
+        {
+            SIM_ERROR("we have no option for resource type {}", cur_type);
+            exit(1);
+        }
+        }
         mRenderResources.push_back(new_res);
     }
 
@@ -71,20 +95,19 @@ void cRender::Init(std::string conf_path)
     mPngCamFocus = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_focus", root)).segment(0, 3).cast<float>();
     mPngCamUp = cJsonUtil::ReadVectorJson(cJsonUtil::ParseAsValue("camera_up", root)).segment(0, 3).cast<float>();
     mPngCamUp = mPngCamUp.normalized();
+    // for png resource, coords to world coords
 
-    std::cout << "raw pos = " << mPngCamPos.transpose() << std::endl;
-    std::cout << "raw focus = " << mPngCamFocus.transpose() << std::endl;
-    std::cout << "raw up = " << mPngCamUp.transpose() << std::endl;
-    mEnableTransformDepthImageToWorldCoords = cJsonUtil::ParseAsBool("transform_obj_to_world_coords", root);
-
-    // camera coords to world coords
-    if (this->mEnableTransformDepthImageToWorldCoords == true)
+    for (auto &res : mRenderResources)
     {
-        for (auto &res : mRenderResources)
+        auto img_res = std::dynamic_pointer_cast<tRenderResourceImageBase>(res);
+        if (img_res != nullptr)
         {
-            res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
+            img_res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
         }
+        res->InitPointCloudArray();
     }
+
+    // for
 
     InitGL();
     InitAxesGL();
@@ -142,14 +165,37 @@ void cRender::Update()
         {
             if (mEnableRenderResource[i] == false)
                 continue;
-            auto &res = this->mRenderResources[i];
-            ball_shader->setVec3("ball_color", glm::vec3(res->mColor[0], res->mColor[1], res->mColor[2]));
-            for (auto &pt : res->mPointCloudArray)
-            {
-                model.block(0, 3, 3, 1) = pt;
+            auto &res = mRenderResources[i];
 
-                ball_shader->setMat4("ubo.model", E2GLM(model));
-                glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
+            if (std::dynamic_pointer_cast<tRenderResourceMesh4View>(res) == nullptr)
+            {
+                // std::cout << "single resource\n";
+                ball_shader->setVec3("ball_color", glm::vec3(res->mColor[0], res->mColor[1], res->mColor[2]));
+                for (auto &pt : res->mPointCloudArray)
+                {
+                    model.block(0, 3, 3, 1) = pt;
+
+                    ball_shader->setMat4("ubo.model", E2GLM(model));
+                    glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
+                }
+            }
+            else
+            {
+                // 4 views
+                // std::cout << "multiview resource\n";
+                for (int i = 0; i < 2; i++)
+                {
+                    tVector3f cur_color = res->mColor * (i + 1) * 0.25;
+                    ball_shader->setVec3("ball_color", glm::vec3(cur_color[0], cur_color[1], cur_color[2]));
+                    int num_of_pts_gap = res->mPointCloudArray.size() / 4;
+                    for (int _idx = num_of_pts_gap * i; _idx < num_of_pts_gap * (i + 1); _idx++)
+                    {
+                        model.block(0, 3, 3, 1) = res->mPointCloudArray[_idx];
+
+                        ball_shader->setMat4("ubo.model", E2GLM(model));
+                        glDrawElements(GL_TRIANGLES, mBallObj.mNumIndices, GL_UNSIGNED_INT, 0);
+                    }
+                }
             }
         }
         // mNeedToRedrawPointCloud = true;

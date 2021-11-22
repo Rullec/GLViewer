@@ -79,7 +79,7 @@ void cRenderImGui::Update()
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         {
             {
-                ImVec2 init_window_size = ImVec2(600, 100);
+                ImVec2 init_window_size = ImVec2(400, 200);
                 ImGui::SetNextWindowSize(init_window_size, ImGuiCond_FirstUseEver);
                 // if (mNeedToUpdateImGuiWindowPos == true)
                 // {
@@ -114,25 +114,34 @@ void cRenderImGui::Update()
                                                              res->mColor[2],
                                                              1.0));
                     // bool & enable = ;
-                    ImGui::Checkbox(res->mName.c_str(), &(mEnableRenderResource[i]));
                     ImGui::PopStyleColor();
+                    ImGui::Checkbox(res->mName.c_str(), &(mEnableRenderResource[i]));
+                    if (mEnableRenderResource[i])
+                    {
+                        ImGui::SameLine();
+                        std::string name = "adjust pos" + std::to_string(i);
+                        ImGui::Checkbox(name.c_str(), &(mEnableTransformAdjust[i]));
+                        // std::cout << mEnableTransformAdjust[i] << std::endl;
+                        if (mEnableTransformAdjust[i] == true)
+                        {
+                            // ImGui::SameLine();
+                            float tran_scale = 1e2;
+                            float pos_val[3] = {
+                                res->GetPos()[0] * tran_scale,
+                                res->GetPos()[1] * tran_scale,
+                                res->GetPos()[2] * tran_scale};
+                            float y_rot = res->GetRotAxisAngle()[1];
+                            std::string pos_name = "adjust Y [" + std::to_string(i) + "] [cm]";
+                            std::string ang_name = "adjust Y [" + std::to_string(i) + "] [rad]";
+                            // ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
+                            ImGui::DragFloat(pos_name.c_str(), pos_val + 1, 0.1, -20, 20);
+                            ImGui::DragFloat(ang_name.c_str(), &y_rot, 0.01, -3.14, 3.14);
+
+                            res->SetPos(tVector3f(pos_val[0], pos_val[1], pos_val[2]) / tran_scale);
+                            res->SetRotAxisAngle(tVector3f(0, y_rot, 0));
+                        }
+                    }
                     // ImGui::SameLine();
-                    // tVector3f aabb_min, aabb_max;
-                    // res->CalcAABB(aabb_min, aabb_max);
-                    // aabb_min *= 100;
-                    // aabb_max *= 100;
-                    // tVector3f mid = (aabb_min + aabb_max) / 2;
-                    // tVector3f box = aabb_max - aabb_min;
-                    // ImGui::Text("middle %.1f %.1f %.1f[cm]", mid[0], mid[1], mid[2]);
-                    // // ImGui::Text("min %.1f %.1f %.1f[cm]", aabb_min[0],
-                    // //             aabb_min[1],
-                    // //             aabb_min[2]);
-                    // // ImGui::Text("max %.1f %.1f %.1f[cm]", aabb_max[0],
-                    // //             aabb_max[1],
-                    // //             aabb_max[2]);
-                    // ImGui::Text("box %.1f %.1f %.1f[cm]", box[0],
-                    //             box[1],
-                    //             box[2]);
                 }
                 ImGui::PopStyleColor();
                 ImGui::End();
