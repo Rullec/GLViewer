@@ -5,7 +5,8 @@
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 #include "cameras/CameraBase.h"
-
+#include "sim_kinect/SimKinect.h"
+extern cSimKinectPtr sim_kinect;
 void cRenderImGui::MouseMoveCallback(double xpos, double ypos)
 {
     ImGuiIO &io = ImGui::GetIO();
@@ -78,74 +79,118 @@ void cRenderImGui::Update()
         // ImGui::ShowDemoWindow();
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         {
+
+            ImVec2 init_window_size = ImVec2(400, 200);
+            ImGui::SetNextWindowSize(init_window_size, ImGuiCond_FirstUseEver);
+            // if (mNeedToUpdateImGuiWindowPos == true)
+            // {
+            //     ImGui::SetNextWindowPos(ImVec2(float(gWindowWidth) - init_window_size.x, 0),
+            //                             ImGuiCond_Always);
+            //     mNeedToUpdateImGuiWindowPos = false;
+            // }
+
+            ImGuiWindowFlags window_flags = 0;
+            // window_flags |= ImGuiWindowFlags_NoMove;
+            // window_flags |= ImGuiWindowFlags_NoResize;
+            bool open = false;
+            bool *p_open = &open;
+
+            ImGui::Begin("render setting", p_open, window_flags);
+            // ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 0.7, 0.6, 1.00));
+            // ImGui::Text("hello imgui");
+
+            bool need_reload = false;
             {
-                ImVec2 init_window_size = ImVec2(400, 200);
-                ImGui::SetNextWindowSize(init_window_size, ImGuiCond_FirstUseEver);
-                // if (mNeedToUpdateImGuiWindowPos == true)
-                // {
-                //     ImGui::SetNextWindowPos(ImVec2(float(gWindowWidth) - init_window_size.x, 0),
-                //                             ImGuiCond_Always);
-                //     mNeedToUpdateImGuiWindowPos = false;
-                // }
-
-                ImGuiWindowFlags window_flags = 0;
-                // window_flags |= ImGuiWindowFlags_NoMove;
-                // window_flags |= ImGuiWindowFlags_NoResize;
-                bool open = false;
-                bool *p_open = &open;
-
-                ImGui::Begin("render setting", p_open, window_flags);
-                // ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 0.7, 0.6, 1.00));
-                // ImGui::Text("hello imgui");
-                if (true == ImGui::Button("Reset camera"))
+                int focal_length = sim_kinect->GetFocalLength();
+                ImGui::DragInt("focal_length", &sim_kinect->GetFocalLength(), 1.0f, 100, 1000);
+                float baseline = sim_kinect->GetBaseline();
+                ImGui::DragFloat("baseline[m]", &sim_kinect->GetBaseline(), 0.001f, 0.01f, 0.1f);
+                if (
+                    std::fabs(focal_length - sim_kinect->GetFocalLength()) > 1e-6 ||
+                    std::fabs(baseline - sim_kinect->GetBaseline()) > 1e-6)
                 {
-                    mCam->ResetPos();
+                    need_reload = true;
                 }
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.7, 0.6, 1.00));
-
-                // bool go = false, go1 = false;
-                // ImGui::Checkbox("check1", &go);
-                for (int i = 0; i < mRenderResources.size(); i++)
+                if (need_reload)
                 {
-                    auto res = mRenderResources[i];
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(
-                                                             res->mColor[0],
-                                                             res->mColor[1],
-                                                             res->mColor[2],
-                                                             1.0));
-                    // bool & enable = ;
-                    ImGui::PopStyleColor();
-                    ImGui::Checkbox(res->mName.c_str(), &(mEnableRenderResource[i]));
-                    if (mEnableRenderResource[i])
+                    std::cout << "reload!\n";
+                    for (auto &x : this->mRenderResources)
                     {
-                        ImGui::SameLine();
-                        std::string name = "adjust pos" + std::to_string(i);
-                        ImGui::Checkbox(name.c_str(), &(mEnableTransformAdjust[i]));
-                        // std::cout << mEnableTransformAdjust[i] << std::endl;
-                        if (mEnableTransformAdjust[i] == true)
+                        auto img_res = std::dynamic_pointer_cast<tRenderResourceImageBase>(x);
+                        if (img_res != nullptr)
                         {
-                            // ImGui::SameLine();
-                            float tran_scale = 1e2;
-                            float pos_val[3] = {
-                                res->GetPos()[0] * tran_scale,
-                                res->GetPos()[1] * tran_scale,
-                                res->GetPos()[2] * tran_scale};
-                            float y_rot = res->GetRotAxisAngle()[1];
-                            std::string pos_name = "adjust Y [" + std::to_string(i) + "] [cm]";
-                            std::string ang_name = "adjust Y [" + std::to_string(i) + "] [rad]";
-                            // ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
-                            ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
-                            ImGui::DragFloat(ang_name.c_str(), &y_rot, 0.01, -3.14, 3.14);
-
-                            res->SetPos(tVector3f(pos_val[0], pos_val[1], pos_val[2]) / tran_scale);
-                            res->SetRotAxisAngle(tVector3f(0, y_rot, 0));
+                            img_res->LoadResource();
+                            img_res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
+                            img_res->InitPointCloudArray();
+                            img_res->ApplyTransform();
                         }
                     }
-                    // ImGui::SameLine();
                 }
-                ImGui::PopStyleColor();
-                ImGui::End();
             }
+            if (true == ImGui::Button("Reset camera"))
+                mCam->ResetPos();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.7, 0.6, 1.00));
+
+            // bool go = false, go1 = false;
+            // ImGui::Checkbox("check1", &go);
+            for (int i = 0; i < mRenderResources.size(); i++)
+            {
+                auto res = mRenderResources[i];
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(
+                                                         res->mColor[0],
+                                                         res->mColor[1],
+                                                         res->mColor[2],
+                                                         1.0));
+                // bool & enable = ;
+                ImGui::PopStyleColor();
+                ImGui::Checkbox(res->mName.c_str(), &(mEnableRenderResource[i]));
+
+                if (mEnableRenderResource[i])
+                {
+                    ImGui::SameLine();
+                    std::string name = "adjust pos" + std::to_string(i);
+                    ImGui::Checkbox(name.c_str(), &(mEnableTransformAdjust[i]));
+
+                    auto img_res = std::dynamic_pointer_cast<tRenderResourceImageBase>(res);
+                    if (img_res != nullptr)
+                    {
+                        ImGui::SameLine();
+                        bool cur_val = img_res->mEnableKinectNoise;
+                        ImGui::Checkbox("enable kinect noise", &cur_val);
+                        if (cur_val != img_res->mEnableKinectNoise)
+                        {
+                            std::cout << "now reload " << i << std::endl;
+                            img_res->SetEnableKinectNoise(cur_val);
+                            img_res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
+                            img_res->InitPointCloudArray();
+                            img_res->ApplyTransform();
+                        }
+                    }
+
+                    // std::cout << mEnableTransformAdjust[i] << std::endl;
+                    if (mEnableTransformAdjust[i] == true)
+                    {
+                        // ImGui::SameLine();
+                        float tran_scale = 1e2;
+                        float pos_val[3] = {
+                            res->GetPos()[0] * tran_scale,
+                            res->GetPos()[1] * tran_scale,
+                            res->GetPos()[2] * tran_scale};
+                        float y_rot = res->GetRotAxisAngle()[1];
+                        std::string pos_name = "adjust Y [" + std::to_string(i) + "] [cm]";
+                        std::string ang_name = "adjust Y [" + std::to_string(i) + "] [rad]";
+                        // ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
+                        ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
+                        ImGui::DragFloat(ang_name.c_str(), &y_rot, 0.01, -3.14, 3.14);
+
+                        res->SetPos(tVector3f(pos_val[0], pos_val[1], pos_val[2]) / tran_scale);
+                        res->SetRotAxisAngle(tVector3f(0, y_rot, 0));
+                    }
+                }
+                // ImGui::SameLine();
+            }
+            ImGui::PopStyleColor();
+            ImGui::End();
         }
 
         // Rendering

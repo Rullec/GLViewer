@@ -3,8 +3,9 @@
 #include "utils/OpenCVUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/StringUtil.h"
+#include "sim_kinect/SimKinect.h"
 extern double fov;
-
+extern cSimKinectPtr sim_kinect;
 const std::string gRenderResourceTypStr[eRenderResourceType::NUM_RESOURCE_TYPE] = {
     "single_view_image",
     "multi_view_image",
@@ -117,6 +118,11 @@ tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf, 
     // 1. load the png, check the shape
     SIM_ASSERT(cFileUtil::ExistsFile(mResourcePath) == true);
     mRenderResourceType = GetImageTypeFromPath(mResourcePath);
+    LoadResource();
+}
+
+void tRenderResourceSingleImage::LoadResource()
+{
     tMatrixXf img = tMatrixXf::Zero(0, 0);
     switch (mRenderResourceType)
     {
@@ -138,29 +144,29 @@ tRenderResourceSingleImage::tRenderResourceSingleImage(const Json::Value &conf, 
         exit(1);
     }
 
-    if (ptr->mEnableWindow == true)
+    if (mFormat->mEnableWindow == true)
     {
         // the image must be windowed
-        SIM_ASSERT(img.rows() == ptr->mWindowSize[0]);
-        SIM_ASSERT(img.cols() == ptr->mWindowSize[1]);
+        SIM_ASSERT(img.rows() == mFormat->mWindowSize[0]);
+        SIM_ASSERT(img.cols() == mFormat->mWindowSize[1]);
     }
     else
     {
         // the image must be full, raw window
-        std::cout << "raw img size = " << ptr->mRawImgSize.transpose() << std::endl;
-        SIM_ASSERT(img.rows() == ptr->mRawImgSize[0]);
-        SIM_ASSERT(img.cols() == ptr->mRawImgSize[1]);
+        std::cout << "raw img size = " << mFormat->mRawImgSize.transpose() << std::endl;
+        SIM_ASSERT(img.rows() == mFormat->mRawImgSize[0]);
+        SIM_ASSERT(img.cols() == mFormat->mRawImgSize[1]);
     }
 
     // 2. convert it to the resource
-    if (ptr->mEnableWindow == false)
+    if (mFormat->mEnableWindow == false)
     {
         cPng2PointCloud::ResourceWhole(img, fov, mNumOfPoint, mPointCloudArray);
     }
     else
     {
         cPng2PointCloud::ResourceWindow(img, fov,
-                                        ptr->mRawImgSize, ptr->mWindowSt,
+                                        mFormat->mRawImgSize, mFormat->mWindowSt,
                                         mNumOfPoint,
                                         mPointCloudArray);
     }
@@ -176,6 +182,7 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf, tIma
     Json::Value resource_path_lst_json = cJsonUtil::ParseAsValue("resource_path_lst", conf);
     mNumOfPoint = 0;
     mPointCloudArray.clear();
+
     for (int i = 0; i < resource_path_lst_json.size(); i++)
     {
         std::string cur_str = resource_path_lst_json[i].asString();
@@ -185,8 +192,32 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf, tIma
             SIM_ERROR("{} doesn't exist", cur_str);
             exit(1);
         }
-        tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen(cur_str);
-        img /= 255;
+    }
+
+    LoadResource();
+    // SIM_INFO("load {} points from {}, {}, {}, {}", mNumOfPoint, mResourcePathList[0], mResourcePathList[1], mResourcePathList[2], mResourcePathList[3]);
+}
+
+void tRenderResourceMesh4View::LoadResource()
+{
+    mNumOfPoint = 0;
+    mPointCloudArray.clear();
+    for (int i = 0; i < mResourcePathList.size(); i++)
+    {
+        auto cur_str = mResourcePathList[i];
+        // std::cout << "load str " << cur_str << std::endl;
+        tMatrixXf img;
+        if (this->mEnableKinectNoise == true)
+        {
+            // std::cout << "enable kinect noise! load from " << cur_str << std::endl;
+            img = sim_kinect->Calculate(cur_str);
+            img /= 255;
+        }
+        else
+        {
+            img.noalias() = cOpencvUtil::LoadGrayscalePngEigen(cur_str);
+            img /= 255;
+        }
         if (mFormat->mEnableWindow == true)
 
         {
@@ -221,10 +252,8 @@ tRenderResourceMesh4View::tRenderResourceMesh4View(const Json::Value &conf, tIma
             mPointCloudArray.push_back(cur_point_cloud_array[j]);
         }
     }
-
-    // SIM_INFO("load {} points from {}, {}, {}, {}", mNumOfPoint, mResourcePathList[0], mResourcePathList[1], mResourcePathList[2], mResourcePathList[3]);
+    InitPointCloudArray();
 }
-
 /**
  * \brief           Get type from path
 */
@@ -256,10 +285,23 @@ tRenderResourceBase::tRenderResourceBase(const Json::Value &conf)
 
 tRenderResourceImageBase::tRenderResourceImageBase(const Json::Value &conf, tImageFormatPtr ptr) : tRenderResourceBase(conf)
 {
-
+    mEnableKinectNoise = false;
     mFormat = ptr;
 }
 
+void tRenderResourceImageBase::SetEnableKinectNoise(bool val)
+{
+    if (mEnableKinectNoise == val)
+    {
+        return;
+    }
+    else
+    {
+        mEnableKinectNoise = val;
+        std::cout << "begin to relaod resource\n";
+        LoadResource();
+    }
+}
 /**
  * \brief           Apply camera pos, to change the point cloud array
 */
@@ -313,6 +355,7 @@ tVector3f tRenderResourceBase::GetPos() const
 {
     return tVector3f(mTransform(0, 3), mTransform(1, 3), mTransform(2, 3));
 }
+
 /**
  * \brief           Apply camera pos, to change the point cloud array
 */
@@ -426,5 +469,4 @@ tVector3f tRenderResourceBase::GetRotAxisAngle() const
     aa *= theta;
 
     return aa.segment(0, 3).cast<float>();
-    ;
 }

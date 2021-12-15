@@ -42,19 +42,20 @@
                 0
             ],
             "image_format": "format0"
-        },
-        {
-            "type": "obj",
-            "name": "test_obj",
-            "color": [
-                1,
-                1,
-                0
-            ],
-            "obj_path": "assets\\recons_obj\\1121_cufanggezi_recons.obj",
-            "scale": 1e-1,
-            "random_sample": 0.2
         }
+        // ,
+        // {
+        //     "type": "obj",
+        //     "name": "test_obj",
+        //     "color": [
+        //         1,
+        //         1,
+        //         0
+        //     ],
+        //     "obj_path": "assets\\recons_obj\\1121_cufanggezi_recons.obj",
+        //     "scale": 1e-1,
+        //     "random_sample": 0.2
+        // }
     ],
     "camera_pos": [
         0.059,
@@ -87,5 +88,7 @@
             1,
             0
         ]
-    }
+    },
+    "depth_path.bak" : "./assets/small_example_for_noisy.png",
+    "depth_path" : "./assets/cufanggezi0_from_cons.png"
 }

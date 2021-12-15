@@ -74,9 +74,10 @@ add_subdirectory(./src/cameras)
 add_subdirectory(./src/geometries)
 add_subdirectory(./src/restore)
 add_subdirectory(./src/render)
+add_subdirectory(./src/sim_kinect)
 add_subdirectory(./imgui)
 
-set(libs utils_lib ${OpenCV_LIBS} geo_lib res_lib imgui_lib render_lib)
+set(libs utils_lib ${OpenCV_LIBS} geo_lib res_lib imgui_lib render_lib sim_kinect_lib)
 
 
 add_executable(main ./main.cpp)

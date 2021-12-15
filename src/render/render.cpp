@@ -45,11 +45,16 @@ void cRender::InitCam(const Json::Value &conf)
                                             far_plane_dist);
 }
 #include "utils/JsonUtil.h"
+#include "src/sim_kinect/SimKinect.h"
+cSimKinectPtr sim_kinect = nullptr;
 void cRender::Init(std::string conf_path)
 {
     Json::Value root;
     SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
     Json::Value resource_lst = cJsonUtil::ParseAsValue("resource_lst", root);
+    sim_kinect = std::make_shared<cSimKinect>();
+    sim_kinect->Init(root);
+    // exit(1);
     // Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
 
     auto format_ptr = std::make_shared<tImageFormat>(cJsonUtil::ParseAsValue("image_format_info", root));
@@ -443,6 +448,7 @@ void cRender::InitBallGL()
     // pos attribute
     InitGLFormat();
 }
+
 void cRender::SetCamInShader(Shader *this_shader) const
 {
     this_shader->use();

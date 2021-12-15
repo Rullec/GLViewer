@@ -57,7 +57,7 @@ struct tRenderResourceBase
     virtual void ApplyTransform();
     virtual void SetPos(const tVector3f &new_pos);
     virtual tVector3f GetPos() const;
-    virtual void SetRotAxisAngle(const tVector3f & new_aa);
+    virtual void SetRotAxisAngle(const tVector3f &new_aa);
     virtual tVector3f GetRotAxisAngle() const;
     virtual void InitPointCloudArray();
 
@@ -78,15 +78,18 @@ struct tRenderResourceImageBase : tRenderResourceBase
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     tRenderResourceImageBase(const Json::Value &conf, tImageFormatPtr ptr);
+    virtual void LoadResource() = 0;
     static eRenderResourceImageType GetImageTypeFromPath(std::string name);
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
-
+    bool mEnableKinectNoise;
+    void SetEnableKinectNoise(bool val);
     tImageFormatPtr mFormat;
 };
 
 struct tRenderResourceSingleImage : public tRenderResourceImageBase
 {
     tRenderResourceSingleImage(const Json::Value &conf, tImageFormatPtr ptr);
+    virtual void LoadResource() override;
     std::string mResourcePath;
     eRenderResourceImageType mRenderResourceType;
 };
@@ -94,6 +97,7 @@ struct tRenderResourceSingleImage : public tRenderResourceImageBase
 struct tRenderResourceMesh4View : public tRenderResourceImageBase
 {
     tRenderResourceMesh4View(const Json::Value &conf, tImageFormatPtr ptr);
+    virtual void LoadResource() override;
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
     std::vector<std::string> mResourcePathList;
     std::vector<eRenderResourceImageType> mResourceTypeList;
