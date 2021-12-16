@@ -10,5 +10,9 @@ PYBIND11_MODULE(sim_kinect, m)
     py::class_<cSimKinect>(m, "sim_kinect")
         .def(py::init<>())
         .def("Init", &cSimKinect::Init)
-        .def("LoadAndCalculate", &cSimKinect::LoadAndCalculate);
+        .def("LoadAndCalculate", &cSimKinect::LoadAndCalculate)
+        .def("SetFocalLength", &cSimKinect::SetFocalLength)
+        .def("SetBaseline", &cSimKinect::SetBaseline)
+        .def("GetFocalLength", &cSimKinect::GetFocalLength)
+        .def("GetBaseline", &cSimKinect::GetBaseline);
 }

@@ -336,7 +336,7 @@ tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
     // cv::imshow("result" + std::to_string(cMathUtil::RandDouble()), cOpencvUtil::ConvertEigenMatFloatToOpencv(noisy_depth));
     // cv::imshow("raw" + std::to_string(cMathUtil::RandDouble()), cOpencvUtil::ConvertEigenMatFloatToOpencv(raw_depth / pixel_to_m));
     // cv::waitKey(0);
-    return noisy_depth;
+    // return noisy_depth;
 }
 
 tMatrixXf cSimKinect::LoadAndCalculate(std::string img_path)
@@ -353,12 +353,12 @@ tMatrixXf cSimKinect::LoadAndCalculate(std::string img_path)
     return raw_depth;
 }
 
-int &cSimKinect::GetFocalLength()
+int &cSimKinect::GetFocalLengthRef()
 {
     return focal_length;
 }
 
-float &cSimKinect::GetBaseline()
+float &cSimKinect::GetBaselineRef()
 {
     return baseline_m;
 }
@@ -369,4 +369,13 @@ void cSimKinect::SetFocalLength(int focal_length_)
 void cSimKinect::SetBaseline(float base_line_)
 {
     baseline_m = base_line_;
+}
+
+int cSimKinect::GetFocalLength() const
+{
+    return this->focal_length;
+}
+float cSimKinect::GetBaseline() const
+{
+    return this->baseline_m;
 }

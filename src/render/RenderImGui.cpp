@@ -101,13 +101,13 @@ void cRenderImGui::Update()
 
             bool need_reload = false;
             {
-                int focal_length = sim_kinect->GetFocalLength();
-                ImGui::DragInt("focal_length", &sim_kinect->GetFocalLength(), 1.0f, 100, 1000);
-                float baseline = sim_kinect->GetBaseline();
-                ImGui::DragFloat("baseline[m]", &sim_kinect->GetBaseline(), 0.001f, 0.01f, 0.1f);
+                int focal_length = sim_kinect->GetFocalLengthRef();
+                ImGui::DragInt("focal_length", &sim_kinect->GetFocalLengthRef(), 1.0f, 100, 1000);
+                float baseline = sim_kinect->GetBaselineRef();
+                ImGui::DragFloat("baseline[m]", &sim_kinect->GetBaselineRef(), 0.001f, 0.01f, 0.1f);
                 if (
-                    std::fabs(focal_length - sim_kinect->GetFocalLength()) > 1e-6 ||
-                    std::fabs(baseline - sim_kinect->GetBaseline()) > 1e-6)
+                    std::fabs(focal_length - sim_kinect->GetFocalLengthRef()) > 1e-6 ||
+                    std::fabs(baseline - sim_kinect->GetBaselineRef()) > 1e-6)
                 {
                     need_reload = true;
                 }

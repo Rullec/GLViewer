@@ -10,8 +10,10 @@ public:
     virtual void Init();
     virtual tMatrixXf LoadAndCalculate(std::string img_path);
     virtual tMatrixXf Calculate(const tMatrixXf &raw_img);
-    int &GetFocalLength();
-    float &GetBaseline();
+    int &GetFocalLengthRef();
+    float &GetBaselineRef();
+    int GetFocalLength() const;
+    float GetBaseline() const;
     void SetFocalLength(int focal_length);
     void SetBaseline(float base_line);
 
