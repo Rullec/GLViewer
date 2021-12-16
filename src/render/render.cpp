@@ -53,7 +53,7 @@ void cRender::Init(std::string conf_path)
     SIM_ASSERT(cJsonUtil::LoadJson(conf_path, root) == true);
     Json::Value resource_lst = cJsonUtil::ParseAsValue("resource_lst", root);
     sim_kinect = std::make_shared<cSimKinect>();
-    sim_kinect->Init(root);
+    sim_kinect->Init();
     // exit(1);
     // Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
 

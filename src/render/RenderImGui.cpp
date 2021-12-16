@@ -113,7 +113,7 @@ void cRenderImGui::Update()
                 }
                 if (need_reload)
                 {
-                    std::cout << "reload!\n";
+                    // std::cout << "reload!\n";
                     for (auto &x : this->mRenderResources)
                     {
                         auto img_res = std::dynamic_pointer_cast<tRenderResourceImageBase>(x);

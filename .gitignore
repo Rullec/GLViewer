@@ -6,5 +6,6 @@ dlls
 lib
 includes
 *exe
+*pyd
 
 assets/

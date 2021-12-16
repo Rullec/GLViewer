@@ -22,6 +22,8 @@ include_directories(.)
 include_directories(./src)
 include_directories(./imgui)
 
+set(CMAKE_DEBUG_POSTFIX d)
+
 # find OPENGL
 find_package(OpenGL REQUIRED)
 if(OPENGL_FOUND)
@@ -69,6 +71,8 @@ endif()
 set(GL_LIBS ${GLFW3_LIBRARY} ${GLEW_STATIC_LIBRARIES} ${OPENGL_LIBRARIES})
 
 # add sources
+add_subdirectory(includes/pybind11)
+include_directories(includes/pybind11/include)
 add_subdirectory(./src/utils)
 add_subdirectory(./src/cameras)
 add_subdirectory(./src/geometries)

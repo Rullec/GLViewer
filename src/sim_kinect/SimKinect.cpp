@@ -26,7 +26,7 @@ void MeshGrid(const tVectorXf &xx, const tVectorXf &yy,
     yp.colwise() = yy.cast<float>();
 }
 
-void cSimKinect::Init(const Json::Value &conf)
+void cSimKinect::Init()
 {
     // mDepthImagePath = cJsonUtil::ParseAsString("depth_path", conf);
     // std::cout << "[debug] depth image path = " << mDepthImagePath << std::endl;
@@ -289,14 +289,14 @@ tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
 
     // 3. filter disp
     // 1. ---------------------------------
-    cTimeUtil::Begin("filter_disp");
+    // cTimeUtil::Begin("filter_disp");
     tMatrixXf disp_ = (depth_interp.array() + float(1e-8)).cwiseAbs().cwiseInverse() * (focal_length * baseline_m);
     // introduce the quantization error
     tMatrixXf depth_f = (disp_ * 8.0f).array().round() / 8.0f; // round(disp * 8) / 8
 
     // 2. ---------------------------------
     filter_disp(depth_f, output_disp, kinect_pattern_mat, h, w, kinect_pattern_mat.rows(), kinect_pattern_mat.cols(), this->invalid_disp);
-    cTimeUtil::End("filter_disp");
+    // cTimeUtil::End("filter_disp");
 
     // 3. -----------------------------------
     Eigen::MatrixXf depth = (output_disp.array() + float(1e-8)).cwiseInverse() * (focal_length * baseline_m);
@@ -339,15 +339,15 @@ tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
     return noisy_depth;
 }
 
-tMatrixXf cSimKinect::Calculate(std::string img_path)
+tMatrixXf cSimKinect::LoadAndCalculate(std::string img_path)
 {
     // cTimeUtil::Begin("calc");
     // 1. read depth image
     tMatrixXf raw_depth = cOpencvUtil::LoadGrayscalePngEigen(img_path);
     // std::cout << "raw depth mean = " << raw_depth.cwiseAbs().mean() << std::endl;
     raw_depth = Calculate(raw_depth);
-    std::cout << "[sim_kinect] calc: focal length = " << this->focal_length << std::endl;
-    std::cout << "[sim_kinect] calc: baseline = " << this->baseline_m << std::endl;
+    // std::cout << "[sim_kinect] calc: focal length = " << this->focal_length << std::endl;
+    // std::cout << "[sim_kinect] calc: baseline = " << this->baseline_m << std::endl;
     // cTimeUtil::End("calc");
     // std::cout << "new depth mean = " << raw_depth.cwiseAbs().mean() << std::endl;
     return raw_depth;
@@ -361,4 +361,12 @@ int &cSimKinect::GetFocalLength()
 float &cSimKinect::GetBaseline()
 {
     return baseline_m;
+}
+void cSimKinect::SetFocalLength(int focal_length_)
+{
+    focal_length = focal_length_;
+}
+void cSimKinect::SetBaseline(float base_line_)
+{
+    baseline_m = base_line_;
 }

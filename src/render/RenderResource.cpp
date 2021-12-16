@@ -210,7 +210,7 @@ void tRenderResourceMesh4View::LoadResource()
         if (this->mEnableKinectNoise == true)
         {
             // std::cout << "enable kinect noise! load from " << cur_str << std::endl;
-            img = sim_kinect->Calculate(cur_str);
+            img = sim_kinect->LoadAndCalculate(cur_str);
             img /= 255;
         }
         else

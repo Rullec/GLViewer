@@ -6,11 +6,14 @@ class cSimKinect
 {
 public:
     cSimKinect();
-    virtual void Init(const Json::Value &conf);
-    virtual tMatrixXf Calculate(std::string img_path);
+    // virtual void Init(const Json::Value &conf);
+    virtual void Init();
+    virtual tMatrixXf LoadAndCalculate(std::string img_path);
     virtual tMatrixXf Calculate(const tMatrixXf &raw_img);
     int &GetFocalLength();
     float &GetBaseline();
+    void SetFocalLength(int focal_length);
+    void SetBaseline(float base_line);
 
 protected:
     const float invalid_disp = 99999999.9;
