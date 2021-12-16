@@ -4,7 +4,8 @@ project(KinectCap VERSION 0.1.0)
 # custom cmake scripts
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(./cmake/configure_movecmd.cmake)
-set (CMAKE_CXX_STANDARD 20)
+# set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD 17)
 
 if(WIN32)
 	include_directories(includes)
@@ -15,6 +16,8 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4061 /wd4244 /wd4246 /wd4305 /wd4267 /wd4711 /wd4710 /wd4514 /wd4477")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+else()
+    add_definitions(-fPIC)
 endif()
 # include path and lib path
 include_directories(./includes)
@@ -47,6 +50,7 @@ set(GLEW_USE_STATIC_LIBS True)
 #     link_directories(${GLEW_LIBRARY_DIRS})
 #     include_directories(${GLEW_INCLUDE_DIRS})
 # endif()
+
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -71,8 +75,19 @@ endif()
 set(GL_LIBS ${GLFW3_LIBRARY} ${GLEW_STATIC_LIBRARIES} ${OPENGL_LIBRARIES})
 
 # add sources
-add_subdirectory(includes/pybind11)
-include_directories(includes/pybind11/include)
+if(MSVC)
+    add_subdirectory(includes/pybind11)
+    include_directories(includes/pybind11/include)
+else()
+    find_package(pybind11 REQUIRED)
+    include_directories(${PYBIND11_INCLUDE_DIRS})
+    link_directories(${PYBIND11_LIBARARY_DIRS})
+    # find_package(spdlog REQUIRED)
+    # include_directories(${SPDLOG_INCLUDE_DIRS})
+    # link_directories(${SPDLOG_LIBARARY_DIRS})
+endif()
+
+
 add_subdirectory(./src/utils)
 add_subdirectory(./src/cameras)
 add_subdirectory(./src/geometries)

@@ -101,7 +101,8 @@ void cSimKinect::filter_disp(tMatrixXf disp,
                              const int w_kp,
                              const float invalid_disp)
 {
-    const int num_threads = omp_get_num_procs();
+    int num_threads = omp_get_num_procs();
+    num_threads = std::min(num_threads, 64);
     const int size_filter = 9;
     int center = int(size_filter / 2.f);
     tMatrixXf xf, yf;
@@ -302,7 +303,9 @@ tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
     Eigen::MatrixXf depth = (output_disp.array() + float(1e-8)).cwiseInverse() * (focal_length * baseline_m);
 
     // filter the valid depth value.
-    const int num_threads = omp_get_num_procs();
+    int num_threads = omp_get_num_procs();
+    num_threads = std::min(num_threads, 64);
+    // std::cout << "num_threads = " << num_threads << std::endl;
     int zero_count = 0;
 #pragma omp parallel for num_threads(2 * num_threads - 1)
     for (int i = 0; i < h * w; i++)

@@ -25,16 +25,17 @@ if __name__ == "__main__":
         kinect.SetFocalLength(cur_focal)
         cur_baseline = kinect.GetBaseline()
         res = kinect.LoadAndCalculate("./assets/cufanggezi0_from_cons.png")
-        plt.subplot(3, 4, i + 1)
-        plt.title(f"cur_focal {kinect.GetFocalLength()} baseline {kinect.GetBaseline():.2f} ")
-        plt.imshow(res)
+        # plt.subplot(3, 4, i + 1)
+        # plt.title(f"cur_focal {kinect.GetFocalLength()} baseline {kinect.GetBaseline():.2f} ")
+        # plt.imshow(res)
         data_lst.append(res)
         
 
 
     ed = time.time()
-
-    print(res.shape, f"cost {(ed - st) * 1e3} ms")
+    cost_ms = (ed - st) * 1e3
+    print(res.shape, f"total cost {cost_ms} ms, avg {cost_ms / len(data_lst)} ms")
 
     # plt.imshow(res)
     plt.show()
+    plt.savefig("output.png")

@@ -1,4 +1,4 @@
-#include "Render.h"
+#include "render.h"
 #include "utils/FileUtil.h"
 #include "cameras/ArcBallCamera.h"
 #include "RenderCallback.h"

@@ -18,7 +18,10 @@ uint8_t Clamp(int val)
 #include "utils/FileUtil.h"
 cv::Mat cOpencvUtil::LoadGrayscalePng(std::string path)
 {
-    SIM_ASSERT(cFileUtil::ExistsFile(path) == true);
+    if(cFileUtil::ExistsFile(path) == false)
+    {
+        SIM_ERROR("{} doesn't exist ", path);
+    }
     cv::Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
     return img;
 }

@@ -8,3 +8,4 @@ imgui.cpp
 backends/imgui_impl_opengl3.cpp
 backends/imgui_impl_glfw.cpp
 )
+target_link_libraries(imgui_lib ${CMAKE_DL_LIBS})

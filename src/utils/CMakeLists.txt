@@ -1,14 +1,14 @@
 add_subdirectory(./json)
 
 if(UNIX)
-    find_package(spdlog REQUIRED)
-    if(NOT spdlog_FOUND)
-        message(FATAL_ERROR "spdlog not found")
-    endif()
+#     find_package(spdlog REQUIRED)
+  #   if(NOT spdlog_FOUND)
+    #     message(FATAL_ERROR "spdlog not found")
+    # endif()
 endif()
 
-find_package(MPI REQUIRED)
-include_directories(${MPI_CXX_INCLUDE_DIRS})
+# find_package(MPI REQUIRED)
+# include_directories(${MPI_CXX_INCLUDE_DIRS})
 
 add_library(utils_lib FileUtil.cpp
 JsonUtil.cpp
@@ -19,7 +19,7 @@ TimeUtil.cpp
 SysUtil.cpp
 StringUtil.cpp
 LogUtil.cpp
-OpencvUtil.cpp
+OpenCVUtil.cpp
 ObjUtil.cpp
 )
 target_link_libraries(utils_lib JSON)
@@ -31,7 +31,7 @@ endif()
 
 # only for linux
 if(UNIX AND (NOT DEFINED APPLE))
-    target_link_libraries(utils_lib stdc++fs spdlog::spdlog)
+    target_link_libraries(utils_lib stdc++fs ${OpenCV_LIBS} geo_lib)
 endif() 
 
 if (DEFINED APPLE)

@@ -28,6 +28,7 @@ endmacro()
 
 
 macro(move_pybind11_release_to_dir target_dir target_name)
+if(MSVC)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         add_custom_command(
             TARGET ${target_name} POST_BUILD

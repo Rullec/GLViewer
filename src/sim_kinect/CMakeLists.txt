@@ -13,4 +13,5 @@ pybind11_add_module(sim_kinect ./sim_kinect_noise_pybind_export.cpp)
 target_link_libraries(sim_kinect PRIVATE ${OpenCV_LIBS} utils_lib sim_kinect_lib)
 
 message("current source dir " ${CMAKE_SOURCE_DIR})
-move_pybind11_release_to_dir(${CMAKE_SOURCE_DIR} sim_kinect)
+
+set_target_properties(sim_kinect PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR} LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
