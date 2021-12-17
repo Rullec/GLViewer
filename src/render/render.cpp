@@ -54,6 +54,11 @@ void cRender::Init(std::string conf_path)
     Json::Value resource_lst = cJsonUtil::ParseAsValue("resource_lst", root);
     sim_kinect = std::make_shared<cSimKinect>();
     sim_kinect->Init();
+    {
+        // tMatrixXf img = cOpencvUtil::LoadGrayscalePngEigen("assets\\cufanggezi_ps160\\0.png");
+        // img = sim_kinect->AddContinousNoise(img);
+        // exit(1);
+    }
     // exit(1);
     // Json::Value mesh_4view_lst = cJsonUtil::ParseAsValue("mesh_4view_lst", root);
 

@@ -82,7 +82,10 @@ struct tRenderResourceImageBase : tRenderResourceBase
     static eRenderResourceImageType GetImageTypeFromPath(std::string name);
     virtual void ApplyCameraPose(const tVector3f &cam_pos, const tVector3f &cam_focus, const tVector3f &cam_up);
     bool mEnableKinectNoise;
-    void SetEnableKinectNoise(bool val);
+    bool mEnableContinuousNoise;
+    void SetNoiseStatus(bool enable_kinect_noise, bool enable_continous_noise);
+    // void SetEnableKinectNoise(bool val);
+    // void SetEnableContinousNoise(bool val);
     tImageFormatPtr mFormat;
 };
 

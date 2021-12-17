@@ -80,7 +80,7 @@ void cRenderImGui::Update()
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         {
 
-            ImVec2 init_window_size = ImVec2(400, 200);
+            ImVec2 init_window_size = ImVec2(600, 300);
             ImGui::SetNextWindowSize(init_window_size, ImGuiCond_FirstUseEver);
             // if (mNeedToUpdateImGuiWindowPos == true)
             // {
@@ -155,12 +155,16 @@ void cRenderImGui::Update()
                     if (img_res != nullptr)
                     {
                         ImGui::SameLine();
-                        bool cur_val = img_res->mEnableKinectNoise;
-                        ImGui::Checkbox("enable kinect noise", &cur_val);
-                        if (cur_val != img_res->mEnableKinectNoise)
+                        bool old_kinect_noise = img_res->mEnableKinectNoise;
+                        bool old_continous_noise = img_res->mEnableContinuousNoise;
+                        ImGui::Checkbox("enable kinect noise", &old_kinect_noise);
+                        ImGui::SameLine();
+                        ImGui::Checkbox("enable continous noise", &old_continous_noise);
+                        if (old_kinect_noise != img_res->mEnableKinectNoise ||
+                            old_continous_noise != img_res->mEnableContinuousNoise)
                         {
-                            std::cout << "now reload " << i << std::endl;
-                            img_res->SetEnableKinectNoise(cur_val);
+                            std::cout << "begin to set noise status " << old_kinect_noise << old_continous_noise << std::endl;
+                            img_res->SetNoiseStatus(old_kinect_noise, old_continous_noise);
                             img_res->ApplyCameraPose(mPngCamPos, mPngCamFocus, mPngCamUp);
                             img_res->InitPointCloudArray();
                             img_res->ApplyTransform();
@@ -179,6 +183,7 @@ void cRenderImGui::Update()
                         float y_rot = res->GetRotAxisAngle()[1];
                         std::string pos_name = "adjust Y [" + std::to_string(i) + "] [cm]";
                         std::string ang_name = "adjust Y [" + std::to_string(i) + "] [rad]";
+
                         // ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
                         ImGui::DragFloat3(pos_name.c_str(), pos_val, 0.1, -20, 20);
                         ImGui::DragFloat(ang_name.c_str(), &y_rot, 0.01, -3.14, 3.14);

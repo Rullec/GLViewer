@@ -55,6 +55,7 @@ public:
                                             int height, int width);
 
     virtual void MouseRotate();
+    virtual void MiddleKeyMove(float mouse_x, float mouse_y);
 
 protected:
     eCameraType mType;

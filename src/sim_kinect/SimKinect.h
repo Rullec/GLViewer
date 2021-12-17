@@ -8,8 +8,11 @@ public:
     cSimKinect();
     // virtual void Init(const Json::Value &conf);
     virtual void Init();
-    virtual tMatrixXf LoadAndCalculate(std::string img_path);
-    virtual tMatrixXf Calculate(const tMatrixXf &raw_img);
+    virtual tMatrixXf LoadAndCalculateDeprecated(std::string img_path);
+    virtual tMatrixXf LoadAndCalculate(std::string img_path, bool enable_kinect_noise = false, bool enable_continous_noise = false);
+
+    virtual tMatrixXf ApplyKinectHoleQuantizationNoise(const tMatrixXf &raw_img);
+    virtual tMatrixXf AddContinousNoise(const tMatrixXf &raw_img);
     int &GetFocalLengthRef();
     float &GetBaselineRef();
     int GetFocalLength() const;

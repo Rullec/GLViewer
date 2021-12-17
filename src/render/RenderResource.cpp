@@ -207,10 +207,10 @@ void tRenderResourceMesh4View::LoadResource()
         auto cur_str = mResourcePathList[i];
         // std::cout << "load str " << cur_str << std::endl;
         tMatrixXf img;
-        if (this->mEnableKinectNoise == true)
+        if (this->mEnableKinectNoise == true || mEnableContinuousNoise == true)
         {
             // std::cout << "enable kinect noise! load from " << cur_str << std::endl;
-            img = sim_kinect->LoadAndCalculate(cur_str);
+            img = sim_kinect->LoadAndCalculate(cur_str, this->mEnableKinectNoise, this->mEnableContinuousNoise);
             img /= 255;
         }
         else
@@ -283,25 +283,56 @@ tRenderResourceBase::tRenderResourceBase(const Json::Value &conf)
     mTransform.setIdentity();
 }
 
-tRenderResourceImageBase::tRenderResourceImageBase(const Json::Value &conf, tImageFormatPtr ptr) : tRenderResourceBase(conf)
+void tRenderResourceImageBase::SetNoiseStatus(bool enable_kinect_noise, bool enable_continous_noise)
 {
-    mEnableKinectNoise = false;
-    mFormat = ptr;
-}
-
-void tRenderResourceImageBase::SetEnableKinectNoise(bool val)
-{
-    if (mEnableKinectNoise == val)
+    if (
+        (mEnableContinuousNoise == enable_continous_noise) &&
+        (mEnableKinectNoise == enable_kinect_noise))
     {
         return;
     }
     else
     {
-        mEnableKinectNoise = val;
-        std::cout << "begin to relaod resource\n";
+        mEnableKinectNoise = enable_kinect_noise;
+        mEnableContinuousNoise = enable_continous_noise;
+        std::cout << "begin to load resource\n";
         LoadResource();
     }
 }
+
+tRenderResourceImageBase::tRenderResourceImageBase(const Json::Value &conf, tImageFormatPtr ptr) : tRenderResourceBase(conf)
+{
+    mEnableKinectNoise = false;
+    mEnableContinuousNoise = false;
+    mFormat = ptr;
+}
+
+// void tRenderResourceImageBase::SetEnableKinectNoise(bool val)
+// {
+//     if (mEnableKinectNoise == val)
+//     {
+//         return;
+//     }
+//     else
+//     {
+//         mEnableKinectNoise = val;
+//         // std::cout << "begin to relaod resource\n";
+//         LoadResource();
+//     }
+// }
+
+// void tRenderResourceImageBase::SetEnableContinousNoise(bool val)
+// {
+//     if (mEnableContinuousNoise == val)
+//     {
+//         return;
+//     }
+//     else
+//     {
+//         mEnableContinuousNoise = val;
+//         LoadResource();
+//     }
+// }
 /**
  * \brief           Apply camera pos, to change the point cloud array
 */

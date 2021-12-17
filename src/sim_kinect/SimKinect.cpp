@@ -273,7 +273,7 @@ void cSimKinect::filter_disp(tMatrixXf disp,
     }
 }
 
-tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
+tMatrixXf cSimKinect::ApplyKinectHoleQuantizationNoise(const tMatrixXf &raw_depth)
 {
     int h = raw_depth.rows();
     int w = raw_depth.cols();
@@ -342,13 +342,35 @@ tMatrixXf cSimKinect::Calculate(const tMatrixXf &raw_depth)
     // return noisy_depth;
 }
 
-tMatrixXf cSimKinect::LoadAndCalculate(std::string img_path)
+tMatrixXf cSimKinect::LoadAndCalculate(std::string img_path, bool enable_kinect_noise
+                                       //= false
+                                       ,
+                                       bool enable_continous_noise
+                                       //= false
+)
+{
+    tMatrixXf raw_depth = cOpencvUtil::LoadGrayscalePngEigen(img_path);
+    std::cout << "load data for " << img_path << std::endl;
+    if (enable_continous_noise)
+    {
+        // std::cout << "add continous noise\n";
+        raw_depth = AddContinousNoise(raw_depth);
+    }
+    if (enable_kinect_noise)
+    {
+        // std::cout << "add kinect hole noise\n";
+        raw_depth = ApplyKinectHoleQuantizationNoise(raw_depth);
+    }
+    return raw_depth;
+}
+tMatrixXf cSimKinect::LoadAndCalculateDeprecated(std::string img_path)
 {
     // cTimeUtil::Begin("calc");
     // 1. read depth image
     tMatrixXf raw_depth = cOpencvUtil::LoadGrayscalePngEigen(img_path);
+    raw_depth = AddContinousNoise(raw_depth);
     // std::cout << "raw depth mean = " << raw_depth.cwiseAbs().mean() << std::endl;
-    raw_depth = Calculate(raw_depth);
+    raw_depth = ApplyKinectHoleQuantizationNoise(raw_depth);
     // std::cout << "[sim_kinect] calc: focal length = " << this->focal_length << std::endl;
     // std::cout << "[sim_kinect] calc: baseline = " << this->baseline_m << std::endl;
     // cTimeUtil::End("calc");
@@ -381,4 +403,43 @@ int cSimKinect::GetFocalLength() const
 float cSimKinect::GetBaseline() const
 {
     return this->baseline_m;
+}
+
+tMatrixXf cSimKinect::AddContinousNoise(const tMatrixXf &raw_img)
+{
+    int incre_threshold = cMathUtil::RandDouble(0, 1) * 8;
+    // int incre_threshold = 4;
+    int threshold = raw_img.maxCoeff() + incre_threshold;
+    // std::cout << "add incre threshold = " << incre_threshold << std::endl;
+    cv::Mat raw_img_cv = cOpencvUtil::ConvertEigenMatFloatToOpencv(raw_img);
+    cv::Mat raw_img_cv_old;
+    raw_img_cv.copyTo(raw_img_cv_old);
+    raw_img_cv.convertTo(raw_img_cv, CV_8UC1);
+    // cv::imshow("raw img", raw_img_cv);
+    cv::Mat all_contour;
+    cv::Canny(raw_img_cv, all_contour, 10, 20);
+    // cv::imshow("all_contour", all_contour);
+    cv::Mat mask = raw_img_cv == 0;
+    raw_img_cv.setTo(threshold, mask);
+    // cv::imshow("raw_img_cv is set to threshold", raw_img_cv);
+    cv::dilate(all_contour, all_contour, cv::Mat::ones(4, 4, CV_8U));
+    // cv::imshow("dilated contour", all_contour);
+
+    // 1. blurred img
+    cv::Mat blurred_img;
+    cv::GaussianBlur(raw_img_cv, blurred_img, cv::Size(7, 7), 2);
+    cv::Mat random_mask(blurred_img.rows, blurred_img.cols, CV_8UC1);
+    cv::randu(random_mask, 0, 100);
+
+    cv::bitwise_and(random_mask > 80, all_contour != 0, all_contour);
+    blurred_img.copyTo(raw_img_cv, all_contour != 0);
+    raw_img_cv.setTo(0, raw_img_cv == threshold);
+    // cv::imshow("blurred locally img", raw_img_cv);
+    // std::cout << "begin to diff\n";
+    // cv::Mat diff(raw_img_cv_old);
+    // cv::absdiff(raw_img_cv_old, raw_img_cv, diff);
+    // cv::imshow("diff", diff);
+
+    // cv::waitKey(0);
+    return cOpencvUtil::ConvertOpencvToEigenMatFloat(raw_img_cv);
 }

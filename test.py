@@ -1,4 +1,5 @@
 import sim_kinect
+import cv2
 from matplotlib import pyplot as plt
 import time
 import numpy as np
@@ -24,10 +25,11 @@ if __name__ == "__main__":
         cur_focal = 100 * i
         kinect.SetFocalLength(cur_focal)
         cur_baseline = kinect.GetBaseline()
-        res = kinect.LoadAndCalculate("./assets/cufanggezi0_from_cons.png")
-        # plt.subplot(3, 4, i + 1)
-        # plt.title(f"cur_focal {kinect.GetFocalLength()} baseline {kinect.GetBaseline():.2f} ")
-        # plt.imshow(res)
+        img = cv2.imread("./assets/cufanggezi0_from_cons.png", cv2.IMREAD_GRAYSCALE)
+        res = kinect.ApplyKinectHoleQuantizationNoise(img)
+        plt.subplot(3, 4, i + 1)
+        plt.title(f"cur_focal {kinect.GetFocalLength()} baseline {kinect.GetBaseline():.2f} ")
+        plt.imshow(res)
         data_lst.append(res)
         
 

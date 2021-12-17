@@ -163,3 +163,8 @@ void CameraBase::MouseRotate()
                                (mCamCenter - mCamPos);
     mCamFront = (mCamCenter - mCamPos).normalized();
 }
+
+void CameraBase:: MiddleKeyMove(float mouse_x, float mouse_y)
+{
+
+}

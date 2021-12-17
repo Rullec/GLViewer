@@ -31,10 +31,10 @@
             "type": "multi_view_image",
             "name": "kinect_mesh_view_nofix",
             "resource_path_lst": [
-                "assets\\cufanggezi_ps160\\0.png",
-                "assets\\cufanggezi_ps160\\1.png",
-                "assets\\cufanggezi_ps160\\2.png",
-                "assets\\cufanggezi_ps160\\3.png"
+                "assets\\cufanggezi_nofix\\0.png",
+                "assets\\cufanggezi_nofix\\1.png",
+                "assets\\cufanggezi_nofix\\2.png",
+                "assets\\cufanggezi_nofix\\3.png"
             ],
             "color": [
                 0,
